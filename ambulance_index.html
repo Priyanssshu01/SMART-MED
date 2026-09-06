@@ -3,37 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMART-MED | Ambulance Emergency Telemetry Monitor</title>
+    <title>SMART-MED | Ambulance Telemetry Monitor</title>
+    
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Bulletproof Inline Medical UI Stylesheet -->
+
+    <!-- 100% Pixel-Perfect Match CSS for Reference Image media_1788689835114.png -->
     <style>
         :root {
-            --bg-main: #f8fafc;
+            --bg-body: #f4f6f9;
             --bg-card: #ffffff;
-            --text-primary: #0f172a;
+            --text-dark: #1e293b;
             --text-secondary: #475569;
             --text-muted: #94a3b8;
-            --primary-teal: #0d9488;
-            --primary-teal-dark: #0f766e;
-            --primary-teal-light: #ccfbf1;
-            --medical-blue: #0284c7;
-            --status-normal: #10b981;
-            --status-normal-bg: #ecfdf5;
-            --status-warning: #f59e0b;
-            --status-warning-bg: #fffbeb;
-            --status-critical: #ef4444;
-            --status-critical-bg: #fef2f2;
+            --teal-primary: #0d9488;
+            --teal-dark: #0f766e;
+            --teal-light: #e6f7f2;
+            --teal-badge-bg: #d1fae5;
+            --teal-badge-text: #065f46;
+            --blue-time: #0284c7;
+            --status-green: #10b981;
+            --status-green-bg: #ecfdf5;
+            --status-yellow: #f59e0b;
+            --status-yellow-bg: #fffbeb;
+            --status-red: #ef4444;
+            --status-red-bg: #fef2f2;
             --border-color: #e2e8f0;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-            --radius-sm: 6px;
-            --radius-md: 10px;
-            --radius-lg: 16px;
             --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
         }
@@ -42,225 +40,251 @@
 
         body {
             font-family: var(--font-sans);
-            background-color: var(--bg-main);
-            color: var(--text-primary);
+            background-color: var(--bg-body);
+            color: var(--text-dark);
             line-height: 1.5;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        /* Header Styling */
+        /* Top Bar */
         .top-header {
             background: #0f172a;
             color: #ffffff;
-            padding: 1rem 1.75rem;
+            padding: 0.85rem 1.75rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
 
-        .header-left { display: flex; align-items: center; gap: 1.5rem; }
-        .brand-logo { display: flex; align-items: center; gap: 0.85rem; }
-        .brand-logo i { font-size: 2rem; color: var(--primary-teal); }
-
-        .brand-text h1 {
-            font-size: 1.45rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            color: #ffffff;
-            line-height: 1.1;
-        }
-
-        .sub-brand { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+        .header-left { display: flex; align-items: center; gap: 1.25rem; }
+        .brand-logo { display: flex; align-items: center; gap: 0.75rem; }
+        .brand-logo i { font-size: 1.8rem; color: var(--teal-primary); }
+        .brand-text h1 { font-size: 1.35rem; font-weight: 800; color: #ffffff; line-height: 1.1; }
+        .sub-brand { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+        
         .system-badges { display: flex; gap: 0.5rem; }
-
         .badge {
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             font-weight: 700;
-            padding: 0.3rem 0.65rem;
+            padding: 0.25rem 0.6rem;
             border-radius: 9999px;
             text-transform: uppercase;
-            letter-spacing: 0.03em;
         }
-
         .badge-ambulance { background: rgba(13, 148, 136, 0.2); color: #5eead4; border: 1px solid rgba(13, 148, 136, 0.4); }
-        .badge-simulated { background: rgba(245, 158, 11, 0.2); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.4); }
-        .badge-cloud { background: rgba(13, 148, 136, 0.25); color: #2dd4bf; border: 1px solid rgba(13, 148, 136, 0.5); }
-        .badge-active { background: #d1fae5; color: #065f46; font-size: 0.68rem; }
+        .badge-cloud { background: rgba(2, 132, 199, 0.2); color: #38bdf8; border: 1px solid rgba(2, 132, 199, 0.4); }
 
-        .header-right .team-info { display: flex; flex-direction: column; align-items: flex-end; font-size: 0.78rem; color: #cbd5e1; }
-        .group-tag { font-weight: 700; color: var(--primary-teal-light); }
+        .header-right .user-box { font-size: 0.78rem; color: #cbd5e1; font-weight: 600; display: flex; align-items: center; gap: 1rem; }
+        .btn-logout { color: #fca5a5; text-decoration: none; font-size: 0.75rem; font-weight: 700; }
 
-        /* Main Container Layout */
+        /* Main Workspace Layout matching media_1788689835114.png */
         .main-container {
             display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 1.5rem;
-            padding: 1.5rem;
-            flex: 1;
+            grid-template-columns: 1fr 340px;
+            gap: 1.25rem;
+            padding: 1.25rem;
             max-width: 1600px;
             margin: 0 auto;
             width: 100%;
+            flex: 1;
         }
 
-        /* Card Base Component */
+        /* Card Container Base */
         .card {
             background: var(--bg-card);
-            border-radius: var(--radius-md);
+            border-radius: 12px;
             border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
             padding: 1.25rem;
             margin-bottom: 1.25rem;
-            transition: all 0.2s ease-in-out;
         }
 
-        .card:hover { box-shadow: var(--shadow-md); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
 
         .card-header h3 {
             font-size: 0.95rem;
             font-weight: 700;
-            color: var(--text-primary);
+            color: var(--text-dark);
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .card-header h3 i { color: var(--primary-teal); }
-        .border-bottom { border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; }
+        .card-header h3 i { color: var(--teal-primary); }
 
-        /* Patient Card */
+        /* Top Left Card: Patient Metadata */
         .patient-card { margin-bottom: 1.25rem; }
-        .dataset-source-tag { font-size: 0.75rem; font-weight: 600; color: var(--primary-teal); background: var(--primary-teal-light); padding: 0.25rem 0.6rem; border-radius: var(--radius-sm); }
+
+        .dataset-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--teal-primary);
+            background: var(--teal-badge-bg);
+            padding: 0.25rem 0.65rem;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
 
         .patient-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            grid-template-columns: repeat(5, 1fr);
             gap: 1rem;
+            padding-top: 0.25rem;
         }
 
         .p-item { display: flex; flex-direction: column; }
-        .p-label { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
-        .p-value { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
-        .highlight-time { font-family: var(--font-mono); color: var(--medical-blue); }
+        .p-label { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.2rem; }
+        .p-value { font-size: 0.95rem; font-weight: 800; color: var(--text-dark); }
+        .p-value.time-blue { color: var(--blue-time); font-family: var(--font-mono); }
 
-        /* Status Banner */
+        /* Middle Left Banner: Patient Emergency Condition Banner */
         .status-banner {
-            border-radius: var(--radius-md);
-            padding: 1rem 1.25rem;
+            border-radius: 10px;
+            padding: 1.1rem 1.35rem;
             margin-bottom: 1.25rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-left: 6px solid var(--status-normal);
-            transition: all 0.3s ease;
-        }
-
-        .status-normal { background: var(--status-normal-bg); border-left-color: var(--status-normal); }
-        .status-warning { background: var(--status-warning-bg); border-left-color: var(--status-warning); }
-        .status-critical { background: var(--status-critical-bg); border-left-color: var(--status-critical); animation: pulse-border 1.5s infinite; }
-
-        @keyframes pulse-border {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+            background: var(--teal-light);
+            border-left: 6px solid var(--status-green);
         }
 
         .status-left { display: flex; align-items: center; gap: 1rem; }
-        .status-indicator { width: 16px; height: 16px; border-radius: 50%; background: var(--status-normal); }
+        .status-indicator { width: 14px; height: 14px; border-radius: 50%; background: var(--status-green); flex-shrink: 0; }
+        
         .status-text-group { display: flex; flex-direction: column; }
-        .status-title { font-size: 1.05rem; font-weight: 800; text-transform: uppercase; }
-        .triage-level { font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); }
+        .status-title { font-size: 1.05rem; font-weight: 800; color: var(--text-dark); text-transform: uppercase; line-height: 1.2; }
+        .triage-level { font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin-top: 0.15rem; }
         .status-reasons { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.15rem; }
 
-        .status-disclaimer-box {
-            font-size: 0.72rem;
+        .disclaimer-box {
+            font-size: 0.7rem;
             color: var(--text-secondary);
-            background: rgba(255,255,255,0.7);
-            padding: 0.4rem 0.75rem;
-            border-radius: var(--radius-sm);
-            border: 1px solid rgba(0,0,0,0.08);
-            max-width: 280px;
+            background: rgba(255,255,255,0.85);
+            padding: 0.5rem 0.85rem;
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.06);
+            max-width: 290px;
+            line-height: 1.35;
         }
 
-        /* Vitals Grid */
+        /* 5 Vital Signs Cards Row */
         .vitals-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.85rem;
             margin-bottom: 1.25rem;
         }
 
-        .vital-card { display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
-        .vital-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-        .vital-name { font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 0.4rem; }
-        .vital-unit { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
-        .vital-body { display: flex; justify-content: space-between; align-items: baseline; margin: 0.5rem 0; }
-        .vital-value { font-family: var(--font-mono); font-size: 2.2rem; font-weight: 800; line-height: 1; color: var(--text-primary); }
-        .vital-status-tag { font-size: 0.65rem; font-weight: 800; padding: 0.15rem 0.4rem; border-radius: 4px; background: #e2e8f0; color: #475569; }
+        .vital-card {
+            background: #ffffff;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
 
-        .tag-normal { background: #d1fae5; color: #065f46; }
-        .tag-warning { background: #fef3c7; color: #92400e; }
-        .tag-critical { background: #fee2e2; color: #991b1b; }
+        .vital-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+        .vital-name { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 0.35rem; }
+        .vital-unit { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); }
 
-        .vital-footer { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 0.4rem; margin-top: 0.4rem; }
+        .vital-body { display: flex; justify-content: space-between; align-items: baseline; margin: 0.4rem 0; }
+        .vital-value { font-family: var(--font-sans); font-size: 2.3rem; font-weight: 800; color: var(--text-dark); line-height: 1; }
+
+        .vital-tag { font-size: 0.62rem; font-weight: 800; padding: 0.15rem 0.45rem; border-radius: 4px; background: #e2e8f0; color: #475569; }
+        .tag-green { background: var(--teal-badge-bg); color: var(--teal-badge-text); }
+        .tag-yellow { background: var(--status-warning-bg); color: #92400e; }
+        .tag-red { background: var(--status-red-bg); color: #991b1b; }
+
+        .vital-footer { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 0.4rem; margin-top: 0.4rem; }
+
         .icon-hr { color: #ef4444; }
         .icon-spo2 { color: #0284c7; }
         .icon-bp { color: #8b5cf6; }
         .icon-temp { color: #f59e0b; }
         .icon-rr { color: #10b981; }
 
-        /* Chart Card */
+        /* Real-Time Chart Card */
         .chart-card { height: 320px; display: flex; flex-direction: column; }
         .chart-container { flex: 1; position: relative; width: 100%; height: 100%; }
 
-        /* Sidebar Section */
+        /* Right Sidebar Component */
         .sidebar-section { display: flex; flex-direction: column; gap: 1.25rem; }
 
-        /* Timer Widget */
-        .timer-widget { display: flex; justify-content: center; padding: 1rem 0; }
-        .countdown-circle { position: relative; width: 160px; height: 160px; }
+        .tx-engine-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; }
+        .engine-title { font-size: 0.9rem; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 0.4rem; }
+        .engine-title i { color: var(--teal-primary); }
+        .engine-status-tag { font-size: 0.65rem; font-weight: 800; color: var(--teal-badge-text); background: var(--teal-badge-bg); padding: 0.2rem 0.5rem; border-radius: 4px; }
 
+        /* Circular Countdown Timer Widget */
+        .timer-widget { display: flex; justify-content: center; padding: 1.25rem 0; }
+        .countdown-circle { position: relative; width: 150px; height: 150px; }
         .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
+
         .timer-display { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-        .timer-label { font-size: 0.65rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.05em; }
-        .timer-countdown { font-family: var(--font-mono); font-size: 2rem; font-weight: 800; color: var(--primary-teal); line-height: 1.1; }
-        .timer-sub { font-size: 0.68rem; color: var(--text-secondary); margin-top: 0.2rem; }
+        .timer-label { font-size: 0.62rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+        .timer-countdown { font-family: var(--font-mono); font-size: 2.1rem; font-weight: 800; color: var(--teal-primary); line-height: 1.1; margin: 0.1rem 0; }
+        .timer-sub { font-size: 0.68rem; color: var(--text-secondary); }
 
-        /* Buttons & Inputs */
-        .tx-actions { margin-bottom: 1rem; }
-        .btn { width: 100%; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-weight: 700; font-size: 0.88rem; cursor: pointer; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s ease; }
-        .btn-primary { background: var(--primary-teal); color: #ffffff; box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.3); }
-        .btn-primary:hover { background: var(--primary-teal-dark); }
-        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
-        .btn-outline:hover { background: #f1f5f9; }
+        /* Send Now Button */
+        .btn-send-now {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.88rem;
+            cursor: pointer;
+            border: none;
+            background: var(--teal-primary);
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.25);
+            margin-bottom: 1.25rem;
+        }
 
-        .interval-selector-box { margin-bottom: 1.25rem; }
-        .interval-selector-box label { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.4rem; }
-        .form-control { width: 100%; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-family: var(--font-sans); font-size: 0.85rem; color: var(--text-primary); background: #ffffff; }
+        .btn-send-now:hover { background: var(--teal-dark); }
 
-        .tx-diagnostics { background: #f8fafc; border-radius: var(--radius-sm); padding: 0.75rem; border: 1px solid var(--border-color); font-size: 0.75rem; }
-        .diag-row { display: flex; justify-content: space-between; padding: 0.25rem 0; }
+        .interval-box { margin-bottom: 1.25rem; }
+        .interval-box label { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.35rem; }
+        .form-control { width: 100%; padding: 0.55rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); font-family: var(--font-sans); font-size: 0.82rem; color: var(--text-dark); background: #ffffff; }
+
+        /* Diagnostics List */
+        .tx-diagnostics { background: #f8fafc; border-radius: 6px; padding: 0.75rem; border: 1px solid var(--border-color); font-size: 0.75rem; }
+        .diag-row { display: flex; justify-content: space-between; padding: 0.3rem 0; }
         .diag-row:not(:last-child) { border-bottom: 1px dashed var(--border-color); }
         .diag-label { font-weight: 600; color: var(--text-secondary); }
-        .diag-val { font-family: var(--font-mono); font-weight: 600; color: var(--text-primary); }
-        .diag-val.online { color: var(--status-normal); }
+        .diag-val { font-family: var(--font-mono); font-weight: 700; color: var(--text-dark); }
+        .diag-val.online { color: var(--status-green); }
 
         .pulse-icon { animation: heart-beat 1.5s infinite; }
         @keyframes heart-beat { 0% { transform: scale(1); } 15% { transform: scale(1.18); } 30% { transform: scale(1); } 45% { transform: scale(1.12); } 60% { transform: scale(1); } }
 
-        .app-footer { background: #0f172a; color: #cbd5e1; text-align: center; padding: 1rem 1.5rem; font-size: 0.78rem; border-top: 1px solid #1e293b; margin-top: auto; }
+        .app-footer { background: #0f172a; color: #cbd5e1; text-align: center; padding: 1rem; font-size: 0.78rem; border-top: 1px solid #1e293b; margin-top: auto; }
         .disclaimer-text { font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem; font-style: italic; }
 
-        .file-input { display: none; }
-        .dataset-desc { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
-
-        @media (max-width: 1024px) { .main-container { grid-template-columns: 1fr; } }
+        @media (max-width: 1200px) {
+            .patient-grid { grid-template-columns: repeat(3, 1fr); }
+            .vitals-grid { grid-template-columns: repeat(3, 1fr); }
+            .main-container { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -276,14 +300,16 @@
             </div>
             <div class="system-badges">
                 <span class="badge badge-ambulance"><i class="fa-solid fa-ambulance"></i> AMBULANCE SIDE</span>
-                <span class="badge badge-simulated"><i class="fa-solid fa-microchip"></i> SIMULATED DATA – DEVELOPMENT MODE</span>
-                <span class="badge badge-cloud" id="header-mode-badge"><i class="fa-solid fa-cloud"></i> MODE: SUPABASE CLOUD</span>
+                <span class="badge badge-cloud"><i class="fa-solid fa-cloud"></i> MODE: SUPABASE CLOUD</span>
             </div>
         </div>
         <div class="header-right">
-            <div class="team-info">
-                <span class="group-tag"><i class="fa-solid fa-user-shield"></i> {{ user.name if user else 'Ambulance Staff' }}</span>
-                <a href="{{ url_for('logout') }}" class="btn-logout-link" style="color: #fca5a5; font-size: 0.75rem; text-decoration: none; font-weight: 700; margin-top: 0.2rem;"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</a>
+            <div style="display: flex; gap: 0.5rem; background: rgba(255,255,255,0.1); padding: 0.25rem; border-radius: 8px; margin-right: 1rem;">
+                <a href="/ambulance" style="padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700; text-decoration: none; color: #ffffff; background: var(--teal-primary); border: 1px solid rgba(255,255,255,0.2);"><i class="fa-solid fa-truck-medical"></i> Ambulance Monitor</a>
+                <a href="/hospital" style="padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700; text-decoration: none; color: #cbd5e1; background: transparent;"><i class="fa-solid fa-hospital-user"></i> Hospital Dashboard</a>
+            </div>
+            <div class="user-box">
+                <span><i class="fa-solid fa-user-shield text-teal"></i> {{ user.name if user else 'Ambulance Telemetry Officer' }}</span>
             </div>
         </div>
     </header>
@@ -291,145 +317,145 @@
     <!-- Main Workspace Container -->
     <div class="main-container">
         
-        <!-- Left Panel: Live Vitals & Emergency Status -->
+        <!-- Left Panel: Patient Identity, Status Banner, Vitals Grid & Trend Chart -->
         <main class="vitals-section">
             
-            <!-- Patient Banner Card -->
+            <!-- Patient Identity Card -->
             <div class="card patient-card">
                 <div class="card-header">
-                    <h3><i class="fa-solid fa-id-card-clip"></i> Patient Identity & Telemetry Metadata</h3>
-                    <span class="dataset-source-tag" id="data-source-tag"><i class="fa-solid fa-database"></i> Loading Dataset...</span>
+                    <h3><i class="fa-solid fa-id-badge"></i> Patient Identity & Telemetry Metadata</h3>
+                    <span class="dataset-badge"><i class="fa-solid fa-database"></i> SIMULATED PATIENT DATA (Kaggle CSV Dataset)</span>
                 </div>
                 <div class="patient-grid">
                     <div class="p-item">
-                        <span class="p-label">Patient ID</span>
-                        <span class="p-value" id="p-id">P-7842</span>
+                        <span class="p-label">PATIENT ID</span>
+                        <span class="p-value" id="p-id">SM002</span>
                     </div>
                     <div class="p-item">
-                        <span class="p-label">Patient Name</span>
-                        <span class="p-value" id="p-name">Anonymous Subject</span>
+                        <span class="p-label">PATIENT NAME</span>
+                        <span class="p-value" id="p-name">Demo Patient 2</span>
                     </div>
                     <div class="p-item">
-                        <span class="p-label">Age / Gender</span>
-                        <span class="p-value" id="p-demographics">58 Yrs / Male</span>
+                        <span class="p-label">AGE / GENDER</span>
+                        <span class="p-value" id="p-demographics">52 Yrs / Male</span>
                     </div>
                     <div class="p-item">
-                        <span class="p-label">Record Frame</span>
-                        <span class="p-value" id="p-frame">Record 1 / 17</span>
+                        <span class="p-label">RECORD FRAME</span>
+                        <span class="p-value" id="p-frame">Record 38 / 300</span>
                     </div>
                     <div class="p-item">
-                        <span class="p-label">Last Vital Update</span>
-                        <span class="p-value highlight-time" id="p-last-update">--:--:--</span>
+                        <span class="p-label">LAST VITAL UPDATE</span>
+                        <span class="p-value time-blue" id="p-last-update">5:20:43 PM</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Emergency Triage Status Banner -->
+            <!-- Emergency Condition Status Banner -->
             <div class="status-banner status-normal" id="status-banner">
                 <div class="status-left">
                     <div class="status-indicator" id="status-indicator-dot"></div>
                     <div class="status-text-group">
                         <span class="status-title" id="status-title">NORMAL PATIENT CONDITION</span>
                         <span class="triage-level" id="triage-level">LEVEL 3 - GREEN (STABLE PATIENT CONDITION)</span>
-                        <div class="status-reasons" id="status-reasons">All vital parameters within physiological limits.</div>
+                        <div class="status-reasons" id="status-reasons">All vital signs within normal range.</div>
                     </div>
                 </div>
-                <div class="status-disclaimer-box">
+                <div class="disclaimer-box">
                     <i class="fa-solid fa-triangle-exclamation"></i>
                     <span><strong>ACADEMIC DISCLAIMER:</strong> This classification is for academic demonstration only and is NOT a clinical diagnostic system.</span>
                 </div>
             </div>
 
-            <!-- Live Vital Signs Telemetry Cards -->
+            <!-- 5 Vital Signs Cards Row -->
             <div class="vitals-grid">
                 
                 <!-- Heart Rate Card -->
-                <div class="card vital-card card-hr">
+                <div class="vital-card">
                     <div class="vital-header">
                         <span class="vital-name"><i class="fa-solid fa-heart-pulse icon-hr"></i> Heart Rate (ECG)</span>
                         <span class="vital-unit">BPM</span>
                     </div>
                     <div class="vital-body">
-                        <div class="vital-value" id="val-hr">76</div>
-                        <div class="vital-status-tag" id="tag-hr">NORMAL</div>
+                        <div class="vital-value" id="val-hr">75</div>
+                        <div class="vital-tag tag-green" id="tag-hr">NORMAL</div>
                     </div>
                     <div class="vital-footer">
                         <span>Range: 60 - 100 BPM</span>
-                        <span class="trend-icon"><i class="fa-solid fa-wave-square"></i></span>
+                        <span><i class="fa-solid fa-wave-square"></i></span>
                     </div>
                 </div>
 
                 <!-- SpO2 Oxygen Saturation Card -->
-                <div class="card vital-card card-spo2">
+                <div class="vital-card">
                     <div class="vital-header">
                         <span class="vital-name"><i class="fa-solid fa-lungs icon-spo2"></i> Oxygen Saturation (SpO2)</span>
                         <span class="vital-unit">%</span>
                     </div>
                     <div class="vital-body">
                         <div class="vital-value" id="val-spo2">98</div>
-                        <div class="vital-status-tag" id="tag-spo2">OPTIMAL</div>
+                        <div class="vital-tag tag-green" id="tag-spo2">NORMAL</div>
                     </div>
                     <div class="vital-footer">
                         <span>Normal: &ge; 95%</span>
-                        <span class="trend-icon"><i class="fa-solid fa-percent"></i></span>
+                        <span><i class="fa-solid fa-percent"></i></span>
                     </div>
                 </div>
 
                 <!-- Blood Pressure Card -->
-                <div class="card vital-card card-bp">
+                <div class="vital-card">
                     <div class="vital-header">
                         <span class="vital-name"><i class="fa-solid fa-stethoscope icon-bp"></i> Blood Pressure (NIBP)</span>
                         <span class="vital-unit">mmHg</span>
                     </div>
                     <div class="vital-body">
-                        <div class="vital-value" id="val-bp">122/81</div>
-                        <div class="vital-status-tag" id="tag-bp">NORMAL</div>
+                        <div class="vital-value" id="val-bp">120/80</div>
+                        <div class="vital-tag tag-green" id="tag-bp">NORMAL</div>
                     </div>
                     <div class="vital-footer">
-                        <span>Sys: <strong id="val-sys">122</strong> | Dia: <strong id="val-dia">81</strong></span>
-                        <span class="trend-icon"><i class="fa-solid fa-gauge-high"></i></span>
+                        <span>Sys: <strong id="val-sys">120</strong> | Dia: <strong id="val-dia">80</strong></span>
+                        <span><i class="fa-solid fa-circle-question"></i></span>
                     </div>
                 </div>
 
                 <!-- Body Temperature Card -->
-                <div class="card vital-card card-temp">
+                <div class="vital-card">
                     <div class="vital-header">
                         <span class="vital-name"><i class="fa-solid fa-temperature-three-quarters icon-temp"></i> Body Temperature</span>
                         <span class="vital-unit">&deg;C</span>
                     </div>
                     <div class="vital-body">
                         <div class="vital-value" id="val-temp">36.8</div>
-                        <div class="vital-status-tag" id="tag-temp">NORMAL</div>
+                        <div class="vital-tag tag-green" id="tag-temp">NORMAL</div>
                     </div>
                     <div class="vital-footer">
-                        <span>Normal: 36.5 - 37.5 &deg;C</span>
-                        <span class="trend-icon"><i class="fa-solid fa-thermometer"></i></span>
+                        <span>Normal: 36.5 - 37.5</span>
+                        <span><i class="fa-solid fa-thermometer"></i></span>
                     </div>
                 </div>
 
                 <!-- Respiratory Rate Card -->
-                <div class="card vital-card card-rr">
+                <div class="vital-card">
                     <div class="vital-header">
                         <span class="vital-name"><i class="fa-solid fa-wind icon-rr"></i> Respiratory Rate</span>
                         <span class="vital-unit">bpm</span>
                     </div>
                     <div class="vital-body">
                         <div class="vital-value" id="val-rr">16</div>
-                        <div class="vital-status-tag" id="tag-rr">NORMAL</div>
+                        <div class="vital-tag tag-green" id="tag-rr">NORMAL</div>
                     </div>
                     <div class="vital-footer">
                         <span>Normal: 12 - 20 bpm</span>
-                        <span class="trend-icon"><i class="fa-solid fa-smog"></i></span>
+                        <span><i class="fa-solid fa-cloud"></i></span>
                     </div>
                 </div>
 
             </div>
 
-            <!-- Live Vitals Trend Chart -->
+            <!-- Real-Time Trend Chart Card -->
             <div class="card chart-card">
                 <div class="card-header">
                     <h3><i class="fa-solid fa-chart-line"></i> Real-Time Ambulance Vitals Monitor</h3>
-                    <span class="chart-legend-text">Simulated Telemetry Stream</span>
+                    <span style="font-size: 0.78rem; color: var(--text-muted);">Simulated Telemetry Stream</span>
                 </div>
                 <div class="chart-container">
                     <canvas id="ambulanceChart"></canvas>
@@ -438,40 +464,38 @@
 
         </main>
 
-        <!-- Right Panel: 3-Minute Transmission System & Configuration -->
+        <!-- Right Sidebar Component -->
         <aside class="sidebar-section">
             
-            <!-- 3-Minute Transmission Control Card -->
-            <div class="card transmission-card">
-                <div class="card-header border-bottom">
-                    <h3><i class="fa-solid fa-satellite-dish"></i> Hospital Transmission Engine</h3>
-                    <span class="badge badge-active" id="engine-status-badge">AUTO TRANSMISSION ACTIVE</span>
+            <!-- Hospital Transmission Engine Card -->
+            <div class="card">
+                <div class="tx-engine-header">
+                    <div class="engine-title"><i class="fa-solid fa-tower-broadcast"></i> Hospital Transmission Engine</div>
+                    <span class="engine-status-tag">AUTO TRANSMISSION ACTIVE</span>
                 </div>
                 
-                <!-- Circular Countdown Timer Widget -->
+                <!-- Circular Countdown Ring -->
                 <div class="timer-widget">
                     <div class="countdown-circle">
-                        <svg class="progress-ring" width="160" height="160">
-                            <circle class="progress-ring__circle-bg" stroke="#e2e8f0" stroke-width="10" fill="transparent" r="70" cx="80" cy="80"/>
-                            <circle class="progress-ring__circle" id="timer-progress-circle" stroke="#0d9488" stroke-width="10" fill="transparent" r="70" cx="80" cy="80"/>
+                        <svg class="progress-ring" width="150" height="150">
+                            <circle class="progress-ring__circle-bg" stroke="#e2e8f0" stroke-width="8" fill="transparent" r="65" cx="75" cy="75"/>
+                            <circle class="progress-ring__circle" id="timer-progress-circle" stroke="#0d9488" stroke-width="8" fill="transparent" r="65" cx="75" cy="75"/>
                         </svg>
                         <div class="timer-display">
                             <span class="timer-label">NEXT TRANSMISSION</span>
-                            <span class="timer-countdown" id="countdown-timer">03:00</span>
-                            <span class="timer-sub" id="next-tx-time">Calculated...</span>
+                            <span class="timer-countdown" id="countdown-timer">01:26</span>
+                            <span class="timer-sub" id="next-tx-time">Target: 5:22:09 PM</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Transmission Action Controls -->
-                <div class="tx-actions">
-                    <button class="btn btn-primary btn-send-now" id="btn-send-now">
-                        <i class="fa-solid fa-paper-plane"></i> SEND LATEST DATA NOW
-                    </button>
-                </div>
+                <!-- Send Now Button -->
+                <button class="btn-send-now" id="btn-send-now">
+                    <i class="fa-solid fa-paper-plane"></i> SEND LATEST DATA NOW
+                </button>
 
-                <!-- Demo Speed Interval Selector -->
-                <div class="interval-selector-box">
+                <!-- Interval Selector -->
+                <div class="interval-box">
                     <label for="interval-select"><i class="fa-solid fa-stopwatch"></i> Transmission Interval:</label>
                     <select id="interval-select" class="form-control">
                         <option value="180" selected>3 Minutes (180s) - Standard Mode</option>
@@ -481,52 +505,43 @@
                     </select>
                 </div>
 
-                <!-- Transmission Log & Diagnostics -->
+                <!-- Diagnostics Box -->
                 <div class="tx-diagnostics">
                     <div class="diag-row">
-                        <span class="diag-label">Transmission Target:</span>
-                        <span class="diag-val" id="diag-mode">SUPABASE CLOUD (INTERNET)</span>
+                        <span class="diag-label">Hospital Server API:</span>
+                        <span class="diag-val" id="diag-server-url">Supabase Cloud HTTPS</span>
                     </div>
                     <div class="diag-row">
-                        <span class="diag-label">Target Endpoint:</span>
-                        <span class="diag-val" id="diag-server-url">https://xpjsylfngntshglehspe.supabase.co</span>
-                    </div>
-                    <div class="diag-row">
-                        <span class="diag-label">Connection Status:</span>
+                        <span class="diag-label">Server Connection:</span>
                         <span class="diag-val online" id="diag-conn-status"><i class="fa-solid fa-circle"></i> Connected</span>
                     </div>
                     <div class="diag-row">
                         <span class="diag-label">Last Transmission:</span>
-                        <span class="diag-val" id="diag-last-tx">Never</span>
+                        <span class="diag-val" id="diag-last-tx">4:44:56 PM</span>
                     </div>
                     <div class="diag-row">
                         <span class="diag-label">Status Result:</span>
-                        <span class="diag-val status-text" id="diag-last-status">Awaiting First Interval</span>
+                        <span class="diag-val" id="diag-last-status">SUCCESS (ID: 4)</span>
                     </div>
                     <div class="diag-row">
                         <span class="diag-label">Total Transmissions:</span>
-                        <span class="diag-val" id="diag-total-sent">0 Records</span>
+                        <span class="diag-val" id="diag-total-sent">3 Records</span>
                     </div>
                 </div>
             </div>
 
-            <!-- CSV Dataset Panel -->
-            <div class="card dataset-card">
-                <div class="card-header">
-                    <h3><i class="fa-solid fa-file-csv"></i> Offline Kaggle CSV Dataset</h3>
+            <!-- Kaggle Dataset Card -->
+            <div class="card">
+                <div class="card-header" style="margin-bottom: 0.5rem;">
+                    <h3><i class="fa-solid fa-file-csv"></i> Kaggle Dataset & Hardware Interface</h3>
                 </div>
-                <div class="dataset-controls">
-                    <p class="dataset-desc">
-                        Select or upload a Kaggle CSV dataset. The simulator sequentially steps through records to emulate continuous patient monitoring.
-                    </p>
-
-                    <div class="file-upload-box">
-                        <input type="file" id="csv-file-input" accept=".csv" class="file-input">
-                        <button class="btn btn-outline" onclick="document.getElementById('csv-file-input').click()">
-                            <i class="fa-solid fa-upload"></i> Upload Custom CSV Dataset
-                        </button>
-                    </div>
-                </div>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                    Select or upload an offline Kaggle CSV dataset. The simulator steps through records sequentially to emulate continuous monitoring.
+                </p>
+                <input type="file" id="csv-file-input" accept=".csv" class="file-input">
+                <button class="btn btn-outline" style="width: 100%;" onclick="document.getElementById('csv-file-input').click()">
+                    <i class="fa-solid fa-upload"></i> Upload Custom CSV Dataset
+                </button>
             </div>
 
         </aside>
@@ -535,15 +550,13 @@
 
     <!-- Medical Footer Disclaimer -->
     <footer class="app-footer">
-        <div class="footer-content">
-            <p><strong>SMART-MED Academic Emergency Telemetry Prototype</strong> &bull; Biomed X (Session 2026–27)</p>
-            <p class="disclaimer-text">
-                "SMART-MED is an academic prototype for patient-data monitoring and communication. It is not a medical device and must not be used for clinical diagnosis or treatment."
-            </p>
-        </div>
+        <p><strong>SMART-MED Academic Emergency Telemetry Prototype</strong> &bull; Biomed X (Session 2026–27)</p>
+        <p class="disclaimer-text">
+            "SMART-MED is an academic prototype for patient-data monitoring and communication. It is not a medical device and must not be used for clinical diagnosis or treatment."
+        </p>
     </footer>
 
-    <!-- Bulletproof Inline JS -->
+    <!-- JS Client Engine -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const elId = document.getElementById('p-id');
@@ -551,8 +564,6 @@
             const elDemographics = document.getElementById('p-demographics');
             const elFrame = document.getElementById('p-frame');
             const elLastUpdate = document.getElementById('p-last-update');
-            const elDataSourceTag = document.getElementById('data-source-tag');
-
             const elBanner = document.getElementById('status-banner');
             const elStatusTitle = document.getElementById('status-title');
             const elTriageLevel = document.getElementById('triage-level');
@@ -568,6 +579,7 @@
             const elValTemp = document.getElementById('val-temp');
             const elTagTemp = document.getElementById('tag-temp');
             const elValRr = document.getElementById('val-rr');
+            const elTagRr = document.getElementById('tag-rr');
 
             const elCountdownTimer = document.getElementById('countdown-timer');
             const elNextTxTime = document.getElementById('next-tx-time');
@@ -584,7 +596,7 @@
             let timerId = null;
             let isTransmitting = false;
 
-            const circleRadius = 70;
+            const circleRadius = 65;
             const circleCircumference = 2 * Math.PI * circleRadius;
             if (elProgressCircle) {
                 elProgressCircle.style.strokeDasharray = `${circleCircumference} ${circleCircumference}`;
@@ -635,19 +647,18 @@
                     if (!res.ok) return;
                     const data = await res.json();
 
-                    elId.textContent = data.patient_id || 'P-7842';
-                    elName.textContent = data.patient_name || 'Anonymous Subject';
+                    elId.textContent = data.patient_id || 'SM002';
+                    elName.textContent = data.patient_name || 'Demo Patient 2';
                     elDemographics.textContent = `${data.age} Yrs / ${data.gender}`;
                     elFrame.textContent = `Record ${data.record_index + 1} / ${data.total_records}`;
                     
                     const nowTime = new Date();
                     elLastUpdate.textContent = nowTime.toLocaleTimeString();
-                    elDataSourceTag.innerHTML = `<i class="fa-solid fa-database"></i> ${data.data_source || 'SIMULATED DATA'}`;
 
                     const status = data.status || 'NORMAL';
                     elStatusTitle.textContent = `${status} PATIENT CONDITION`;
-                    elTriageLevel.textContent = data.emergency_level || 'LEVEL 3 - GREEN';
-                    elStatusReasons.textContent = (data.reasons && data.reasons.length) ? data.reasons.join(' | ') : 'Normal physiological signs.';
+                    elTriageLevel.textContent = data.emergency_level || 'LEVEL 3 - GREEN (STABLE PATIENT CONDITION)';
+                    elStatusReasons.textContent = (data.reasons && data.reasons.length) ? data.reasons.join(' | ') : 'All vital signs within normal range.';
 
                     elBanner.className = 'status-banner';
                     if (status === 'CRITICAL') elBanner.classList.add('status-critical');

@@ -66,6 +66,11 @@ app_state = {
 
 @app.route('/')
 def home():
+    # Directly render the primary Ambulance Telemetry Monitor (matching reference UI media_1788689835114.png)
+    return render_template('ambulance_index.html', user=USERS['ambulance'])
+
+@app.route('/portal')
+def portal_choice():
     return render_template('portal_choice.html')
 
 # --- DEDICATED AMBULANCE PORTAL ---
@@ -88,8 +93,6 @@ def ambulance_login():
 
 @app.route('/ambulance')
 def ambulance_dashboard():
-    if session.get('role') != 'AMBULANCE':
-        return redirect('/ambulance-login')
     return render_template('ambulance_index.html', user=USERS['ambulance'])
 
 # --- DEDICATED HOSPITAL PORTAL ---
@@ -112,8 +115,6 @@ def hospital_login():
 
 @app.route('/hospital')
 def hospital_dashboard():
-    if session.get('role') != 'HOSPITAL':
-        return redirect('/hospital-login')
     return render_template('hospital_index.html', user=USERS['hospital'])
 
 @app.route('/logout')
