@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: smart-med
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app
+    envVars:
+      - key: SUPABASE_URL
+        value: https://xpjsylfngntshglehspe.supabase.co
+      - key: SUPABASE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwanN5bGZuZ250c2hnbGVoc3BlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2ODE3NjEsImV4cCI6MjEwNDI1Nzc2MX0.lPXlmI1kMmAKupXOF_smnO-mVSIV7Ms4mTRkkz4J330

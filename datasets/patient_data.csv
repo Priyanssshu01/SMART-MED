@@ -1,0 +1,18 @@
+patient_id,patient_name,age,gender,heart_rate,spo2,systolic_bp,diastolic_bp,temperature,respiratory_rate
+P-7842,Anonymous Patient,58,Male,76,98,122,81,36.8,16
+P-7842,Anonymous Patient,58,Male,78,98,124,80,36.9,16
+P-7842,Anonymous Patient,58,Male,82,97,126,82,37.0,17
+P-7842,Anonymous Patient,58,Male,88,96,130,85,37.2,18
+P-7842,Anonymous Patient,58,Male,95,95,134,88,37.4,19
+P-7842,Anonymous Patient,58,Male,104,94,142,92,37.8,21
+P-7842,Anonymous Patient,58,Male,115,92,150,96,38.1,24
+P-7842,Anonymous Patient,58,Male,128,89,162,102,38.5,27
+P-7842,Anonymous Patient,58,Male,136,87,174,108,38.9,29
+P-7842,Anonymous Patient,58,Male,142,85,182,112,39.2,32
+P-7842,Anonymous Patient,58,Male,138,86,178,110,39.0,30
+P-7842,Anonymous Patient,58,Male,125,89,164,100,38.6,26
+P-7842,Anonymous Patient,58,Male,110,91,152,94,38.2,23
+P-7842,Anonymous Patient,58,Male,98,94,140,88,37.7,20
+P-7842,Anonymous Patient,58,Male,88,96,132,84,37.3,18
+P-7842,Anonymous Patient,58,Male,80,97,125,81,37.0,17
+P-7842,Anonymous Patient,58,Male,75,98,120,80,36.8,16
