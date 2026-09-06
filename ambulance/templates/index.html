@@ -3,14 +3,289 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMART-MED | Ambulance Emergency Telemetry Monitor</title>
+    <title>SMART-MED | Ambulance Telemetry Monitor</title>
+    
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- 100% Pixel-Perfect Match CSS for Reference Image media_1788689835114.png -->
+    <style>
+        :root {
+            --bg-body: #f4f6f9;
+            --bg-card: #ffffff;
+            --text-dark: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --teal-primary: #0d9488;
+            --teal-dark: #0f766e;
+            --teal-light: #e6f7f2;
+            --teal-badge-bg: #d1fae5;
+            --teal-badge-text: #065f46;
+            --blue-time: #0284c7;
+            --status-green: #10b981;
+            --status-green-bg: #ecfdf5;
+            --status-yellow: #f59e0b;
+            --status-yellow-bg: #fffbeb;
+            --status-red: #ef4444;
+            --status-red-bg: #fef2f2;
+            --border-color: #e2e8f0;
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .top-header {
+            background: #0f172a;
+            color: #ffffff;
+            padding: 0.85rem 1.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .header-left { display: flex; align-items: center; gap: 1.25rem; }
+        .brand-logo { display: flex; align-items: center; gap: 0.75rem; }
+        .brand-logo i { font-size: 1.8rem; color: var(--teal-primary); }
+        .brand-text h1 { font-size: 1.35rem; font-weight: 800; color: #ffffff; line-height: 1.1; }
+        .sub-brand { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+        
+        .system-badges { display: flex; gap: 0.5rem; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+        }
+        .badge-ambulance { background: rgba(13, 148, 136, 0.2); color: #5eead4; border: 1px solid rgba(13, 148, 136, 0.4); }
+        .badge-cloud { background: rgba(2, 132, 199, 0.2); color: #38bdf8; border: 1px solid rgba(2, 132, 199, 0.4); }
+
+        .header-right .user-box { font-size: 0.78rem; color: #cbd5e1; font-weight: 600; display: flex; align-items: center; gap: 1rem; }
+        .btn-logout { color: #fca5a5; text-decoration: none; font-size: 0.75rem; font-weight: 700; }
+
+        /* Main Workspace Layout matching media_1788689835114.png */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 1.25rem;
+            padding: 1.25rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+        }
+
+        /* Card Container Base */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-header h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-header h3 i { color: var(--teal-primary); }
+
+        /* Top Left Card: Patient Metadata */
+        .patient-card { margin-bottom: 1.25rem; }
+
+        .dataset-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--teal-primary);
+            background: var(--teal-badge-bg);
+            padding: 0.25rem 0.65rem;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .patient-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            padding-top: 0.25rem;
+        }
+
+        .p-item { display: flex; flex-direction: column; }
+        .p-label { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.2rem; }
+        .p-value { font-size: 0.95rem; font-weight: 800; color: var(--text-dark); }
+        .p-value.time-blue { color: var(--blue-time); font-family: var(--font-mono); }
+
+        /* Middle Left Banner: Patient Emergency Condition Banner */
+        .status-banner {
+            border-radius: 10px;
+            padding: 1.1rem 1.35rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--teal-light);
+            border-left: 6px solid var(--status-green);
+        }
+
+        .status-left { display: flex; align-items: center; gap: 1rem; }
+        .status-indicator { width: 14px; height: 14px; border-radius: 50%; background: var(--status-green); flex-shrink: 0; }
+        
+        .status-text-group { display: flex; flex-direction: column; }
+        .status-title { font-size: 1.05rem; font-weight: 800; color: var(--text-dark); text-transform: uppercase; line-height: 1.2; }
+        .triage-level { font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin-top: 0.15rem; }
+        .status-reasons { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.15rem; }
+
+        .disclaimer-box {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.85);
+            padding: 0.5rem 0.85rem;
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.06);
+            max-width: 290px;
+            line-height: 1.35;
+        }
+
+        /* 5 Vital Signs Cards Row */
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.85rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .vital-card {
+            background: #ffffff;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .vital-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+        .vital-name { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 0.35rem; }
+        .vital-unit { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); }
+
+        .vital-body { display: flex; justify-content: space-between; align-items: baseline; margin: 0.4rem 0; }
+        .vital-value { font-family: var(--font-sans); font-size: 2.3rem; font-weight: 800; color: var(--text-dark); line-height: 1; }
+
+        .vital-tag { font-size: 0.62rem; font-weight: 800; padding: 0.15rem 0.45rem; border-radius: 4px; background: #e2e8f0; color: #475569; }
+        .tag-green { background: var(--teal-badge-bg); color: var(--teal-badge-text); }
+        .tag-yellow { background: var(--status-warning-bg); color: #92400e; }
+        .tag-red { background: var(--status-red-bg); color: #991b1b; }
+
+        .vital-footer { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 0.4rem; margin-top: 0.4rem; }
+
+        .icon-hr { color: #ef4444; }
+        .icon-spo2 { color: #0284c7; }
+        .icon-bp { color: #8b5cf6; }
+        .icon-temp { color: #f59e0b; }
+        .icon-rr { color: #10b981; }
+
+        /* Real-Time Chart Card */
+        .chart-card { height: 320px; display: flex; flex-direction: column; }
+        .chart-container { flex: 1; position: relative; width: 100%; height: 100%; }
+
+        /* Right Sidebar Component */
+        .sidebar-section { display: flex; flex-direction: column; gap: 1.25rem; }
+
+        .tx-engine-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; }
+        .engine-title { font-size: 0.9rem; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 0.4rem; }
+        .engine-title i { color: var(--teal-primary); }
+        .engine-status-tag { font-size: 0.65rem; font-weight: 800; color: var(--teal-badge-text); background: var(--teal-badge-bg); padding: 0.2rem 0.5rem; border-radius: 4px; }
+
+        /* Circular Countdown Timer Widget */
+        .timer-widget { display: flex; justify-content: center; padding: 1.25rem 0; }
+        .countdown-circle { position: relative; width: 150px; height: 150px; }
+        .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
+
+        .timer-display { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .timer-label { font-size: 0.62rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+        .timer-countdown { font-family: var(--font-mono); font-size: 2.1rem; font-weight: 800; color: var(--teal-primary); line-height: 1.1; margin: 0.1rem 0; }
+        .timer-sub { font-size: 0.68rem; color: var(--text-secondary); }
+
+        /* Send Now Button */
+        .btn-send-now {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.88rem;
+            cursor: pointer;
+            border: none;
+            background: var(--teal-primary);
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.25);
+            margin-bottom: 1.25rem;
+        }
+
+        .btn-send-now:hover { background: var(--teal-dark); }
+
+        .interval-box { margin-bottom: 1.25rem; }
+        .interval-box label { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.35rem; }
+        .form-control { width: 100%; padding: 0.55rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); font-family: var(--font-sans); font-size: 0.82rem; color: var(--text-dark); background: #ffffff; }
+
+        /* Diagnostics List */
+        .tx-diagnostics { background: #f8fafc; border-radius: 6px; padding: 0.75rem; border: 1px solid var(--border-color); font-size: 0.75rem; }
+        .diag-row { display: flex; justify-content: space-between; padding: 0.3rem 0; }
+        .diag-row:not(:last-child) { border-bottom: 1px dashed var(--border-color); }
+        .diag-label { font-weight: 600; color: var(--text-secondary); }
+        .diag-val { font-family: var(--font-mono); font-weight: 700; color: var(--text-dark); }
+        .diag-val.online { color: var(--status-green); }
+
+        .pulse-icon { animation: heart-beat 1.5s infinite; }
+        @keyframes heart-beat { 0% { transform: scale(1); } 15% { transform: scale(1.18); } 30% { transform: scale(1); } 45% { transform: scale(1.12); } 60% { transform: scale(1); } }
+
+        .app-footer { background: #0f172a; color: #cbd5e1; text-align: center; padding: 1rem; font-size: 0.78rem; border-top: 1px solid #1e293b; margin-top: auto; }
+        .disclaimer-text { font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem; font-style: italic; }
+
+        @media (max-width: 1200px) {
+            .patient-grid { grid-template-columns: repeat(3, 1fr); }
+            .vitals-grid { grid-template-columns: repeat(3, 1fr); }
+            .main-container { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
     <!-- Top Header Bar -->
@@ -24,16 +299,17 @@
                 </div>
             </div>
             <div class="system-badges">
-                <span class="badge badge-ambulance"><i class="fa-solid fa-ambulance"></i> AMBULANCE SIDE (LAPTOP 1)</span>
-                <span class="badge badge-simulated"><i class="fa-solid fa-microchip"></i> SIMULATED DATA – DEVELOPMENT MODE</span>
-                <span class="badge badge-cloud" id="header-mode-badge"><i class="fa-solid fa-cloud"></i> MODE: LOCAL</span>
+                <span class="badge badge-ambulance"><i class="fa-solid fa-ambulance"></i> AMBULANCE SIDE</span>
+                <span class="badge badge-cloud"><i class="fa-solid fa-cloud"></i> MODE: SUPABASE CLOUD</span>
             </div>
         </div>
         <div class="header-right">
-            <div class="team-info">
-                <span class="group-tag">Biomed X (Session 2026–27)</span>
-                <span class="team-leader"><i class="fa-solid fa-user-gear"></i> Leader: Sayandeep Chakroborty</span>
-                <span class="team-members">Uttam K. Mahto | Prashant K. | Priyanshu J.</span>
+            <div style="display: flex; gap: 0.5rem; background: rgba(255,255,255,0.1); padding: 0.25rem; border-radius: 8px; margin-right: 1rem;">
+                <a href="/ambulance" style="padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700; text-decoration: none; color: #ffffff; background: var(--teal-primary); border: 1px solid rgba(255,255,255,0.2);"><i class="fa-solid fa-truck-medical"></i> Ambulance Monitor</a>
+                <a href="/hospital" style="padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700; text-decoration: none; color: #cbd5e1; background: transparent;"><i class="fa-solid fa-hospital-user"></i> Hospital Dashboard</a>
+            </div>
+            <div class="user-box">
+                <span><i class="fa-solid fa-user-shield text-teal"></i> {{ user.name if user else 'Ambulance Telemetry Officer' }}</span>
             </div>
         </div>
     </header>
@@ -41,145 +317,145 @@
     <!-- Main Workspace Container -->
     <div class="main-container">
         
-        <!-- Left Panel: Live Vitals & Emergency Status -->
+        <!-- Left Panel: Patient Identity, Status Banner, Vitals Grid & Trend Chart -->
         <main class="vitals-section">
             
-            <!-- Patient Banner Card -->
+            <!-- Patient Identity Card -->
             <div class="card patient-card">
                 <div class="card-header">
-                    <h3><i class="fa-solid fa-id-card-clip"></i> Patient Identity & Telemetry Metadata</h3>
-                    <span class="dataset-source-tag" id="data-source-tag"><i class="fa-solid fa-database"></i> Loading Dataset...</span>
+                    <h3><i class="fa-solid fa-id-badge"></i> Patient Identity & Telemetry Metadata</h3>
+                    <span class="dataset-badge"><i class="fa-solid fa-database"></i> SIMULATED PATIENT DATA (Kaggle CSV Dataset)</span>
                 </div>
                 <div class="patient-grid">
                     <div class="p-item">
-                        <span class="p-label">Patient ID</span>
-                        <span class="p-value" id="p-id">P-7842</span>
+                        <span class="p-label">PATIENT ID</span>
+                        <span class="p-value" id="p-id">SM002</span>
                     </div>
                     <div class="p-item">
-                        <span class="p-label">Patient Name</span>
-                        <span class="p-value" id="p-name">Anonymous Subject</span>
+                        <span class="p-label">PATIENT NAME</span>
+                        <span class="p-value" id="p-name">Demo Patient 2</span>
                     </div>
                     <div class="p-item">
-                        <span class="p-label">Age / Gender</span>
-                        <span class="p-value" id="p-demographics">58 Yrs / Male</span>
+                        <span class="p-label">AGE / GENDER</span>
+                        <span class="p-value" id="p-demographics">52 Yrs / Male</span>
                     </div>
                     <div class="p-item">
-                        <span class="p-label">Record Frame</span>
-                        <span class="p-value" id="p-frame">Record 1 / 17</span>
+                        <span class="p-label">RECORD FRAME</span>
+                        <span class="p-value" id="p-frame">Record 38 / 300</span>
                     </div>
                     <div class="p-item">
-                        <span class="p-label">Last Vital Update</span>
-                        <span class="p-value highlight-time" id="p-last-update">--:--:--</span>
+                        <span class="p-label">LAST VITAL UPDATE</span>
+                        <span class="p-value time-blue" id="p-last-update">5:20:43 PM</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Emergency Triage Status Banner -->
+            <!-- Emergency Condition Status Banner -->
             <div class="status-banner status-normal" id="status-banner">
                 <div class="status-left">
                     <div class="status-indicator" id="status-indicator-dot"></div>
                     <div class="status-text-group">
                         <span class="status-title" id="status-title">NORMAL PATIENT CONDITION</span>
                         <span class="triage-level" id="triage-level">LEVEL 3 - GREEN (STABLE PATIENT CONDITION)</span>
-                        <div class="status-reasons" id="status-reasons">All vital parameters within physiological limits.</div>
+                        <div class="status-reasons" id="status-reasons">All vital signs within normal range.</div>
                     </div>
                 </div>
-                <div class="status-disclaimer-box">
+                <div class="disclaimer-box">
                     <i class="fa-solid fa-triangle-exclamation"></i>
                     <span><strong>ACADEMIC DISCLAIMER:</strong> This classification is for academic demonstration only and is NOT a clinical diagnostic system.</span>
                 </div>
             </div>
 
-            <!-- Live Vital Signs Telemetry Cards -->
+            <!-- 5 Vital Signs Cards Row -->
             <div class="vitals-grid">
                 
                 <!-- Heart Rate Card -->
-                <div class="card vital-card card-hr">
+                <div class="vital-card">
                     <div class="vital-header">
                         <span class="vital-name"><i class="fa-solid fa-heart-pulse icon-hr"></i> Heart Rate (ECG)</span>
                         <span class="vital-unit">BPM</span>
                     </div>
                     <div class="vital-body">
-                        <div class="vital-value" id="val-hr">76</div>
-                        <div class="vital-status-tag" id="tag-hr">NORMAL</div>
+                        <div class="vital-value" id="val-hr">75</div>
+                        <div class="vital-tag tag-green" id="tag-hr">NORMAL</div>
                     </div>
                     <div class="vital-footer">
                         <span>Range: 60 - 100 BPM</span>
-                        <span class="trend-icon"><i class="fa-solid fa-wave-square"></i></span>
+                        <span><i class="fa-solid fa-wave-square"></i></span>
                     </div>
                 </div>
 
                 <!-- SpO2 Oxygen Saturation Card -->
-                <div class="card vital-card card-spo2">
+                <div class="vital-card">
                     <div class="vital-header">
                         <span class="vital-name"><i class="fa-solid fa-lungs icon-spo2"></i> Oxygen Saturation (SpO2)</span>
                         <span class="vital-unit">%</span>
                     </div>
                     <div class="vital-body">
                         <div class="vital-value" id="val-spo2">98</div>
-                        <div class="vital-status-tag" id="tag-spo2">OPTIMAL</div>
+                        <div class="vital-tag tag-green" id="tag-spo2">NORMAL</div>
                     </div>
                     <div class="vital-footer">
                         <span>Normal: &ge; 95%</span>
-                        <span class="trend-icon"><i class="fa-solid fa-percent"></i></span>
+                        <span><i class="fa-solid fa-percent"></i></span>
                     </div>
                 </div>
 
                 <!-- Blood Pressure Card -->
-                <div class="card vital-card card-bp">
+                <div class="vital-card">
                     <div class="vital-header">
                         <span class="vital-name"><i class="fa-solid fa-stethoscope icon-bp"></i> Blood Pressure (NIBP)</span>
                         <span class="vital-unit">mmHg</span>
                     </div>
                     <div class="vital-body">
-                        <div class="vital-value" id="val-bp">122/81</div>
-                        <div class="vital-status-tag" id="tag-bp">NORMAL</div>
+                        <div class="vital-value" id="val-bp">120/80</div>
+                        <div class="vital-tag tag-green" id="tag-bp">NORMAL</div>
                     </div>
                     <div class="vital-footer">
-                        <span>Sys: <strong id="val-sys">122</strong> | Dia: <strong id="val-dia">81</strong></span>
-                        <span class="trend-icon"><i class="fa-solid fa-gauge-high"></i></span>
+                        <span>Sys: <strong id="val-sys">120</strong> | Dia: <strong id="val-dia">80</strong></span>
+                        <span><i class="fa-solid fa-circle-question"></i></span>
                     </div>
                 </div>
 
                 <!-- Body Temperature Card -->
-                <div class="card vital-card card-temp">
+                <div class="vital-card">
                     <div class="vital-header">
                         <span class="vital-name"><i class="fa-solid fa-temperature-three-quarters icon-temp"></i> Body Temperature</span>
                         <span class="vital-unit">&deg;C</span>
                     </div>
                     <div class="vital-body">
                         <div class="vital-value" id="val-temp">36.8</div>
-                        <div class="vital-status-tag" id="tag-temp">NORMAL</div>
+                        <div class="vital-tag tag-green" id="tag-temp">NORMAL</div>
                     </div>
                     <div class="vital-footer">
-                        <span>Normal: 36.5 - 37.5 &deg;C</span>
-                        <span class="trend-icon"><i class="fa-solid fa-thermometer"></i></span>
+                        <span>Normal: 36.5 - 37.5</span>
+                        <span><i class="fa-solid fa-thermometer"></i></span>
                     </div>
                 </div>
 
                 <!-- Respiratory Rate Card -->
-                <div class="card vital-card card-rr">
+                <div class="vital-card">
                     <div class="vital-header">
                         <span class="vital-name"><i class="fa-solid fa-wind icon-rr"></i> Respiratory Rate</span>
                         <span class="vital-unit">bpm</span>
                     </div>
                     <div class="vital-body">
                         <div class="vital-value" id="val-rr">16</div>
-                        <div class="vital-status-tag" id="tag-rr">NORMAL</div>
+                        <div class="vital-tag tag-green" id="tag-rr">NORMAL</div>
                     </div>
                     <div class="vital-footer">
                         <span>Normal: 12 - 20 bpm</span>
-                        <span class="trend-icon"><i class="fa-solid fa-smog"></i></span>
+                        <span><i class="fa-solid fa-cloud"></i></span>
                     </div>
                 </div>
 
             </div>
 
-            <!-- Live Vitals Trend Chart -->
+            <!-- Real-Time Trend Chart Card -->
             <div class="card chart-card">
                 <div class="card-header">
                     <h3><i class="fa-solid fa-chart-line"></i> Real-Time Ambulance Vitals Monitor</h3>
-                    <span class="chart-legend-text">Simulated Telemetry Stream</span>
+                    <span style="font-size: 0.78rem; color: var(--text-muted);">Simulated Telemetry Stream</span>
                 </div>
                 <div class="chart-container">
                     <canvas id="ambulanceChart"></canvas>
@@ -188,40 +464,38 @@
 
         </main>
 
-        <!-- Right Panel: 3-Minute Transmission System & Configuration -->
+        <!-- Right Sidebar Component -->
         <aside class="sidebar-section">
             
-            <!-- 3-Minute Transmission Control Card -->
-            <div class="card transmission-card">
-                <div class="card-header border-bottom">
-                    <h3><i class="fa-solid fa-satellite-dish"></i> Hospital Transmission Engine</h3>
-                    <span class="badge badge-active" id="engine-status-badge">AUTO TRANSMISSION ACTIVE</span>
+            <!-- Hospital Transmission Engine Card -->
+            <div class="card">
+                <div class="tx-engine-header">
+                    <div class="engine-title"><i class="fa-solid fa-tower-broadcast"></i> Hospital Transmission Engine</div>
+                    <span class="engine-status-tag">AUTO TRANSMISSION ACTIVE</span>
                 </div>
                 
-                <!-- Circular Countdown Timer Widget -->
+                <!-- Circular Countdown Ring -->
                 <div class="timer-widget">
                     <div class="countdown-circle">
-                        <svg class="progress-ring" width="160" height="160">
-                            <circle class="progress-ring__circle-bg" stroke="#e2e8f0" stroke-width="10" fill="transparent" r="70" cx="80" cy="80"/>
-                            <circle class="progress-ring__circle" id="timer-progress-circle" stroke="#0d9488" stroke-width="10" fill="transparent" r="70" cx="80" cy="80"/>
+                        <svg class="progress-ring" width="150" height="150">
+                            <circle class="progress-ring__circle-bg" stroke="#e2e8f0" stroke-width="8" fill="transparent" r="65" cx="75" cy="75"/>
+                            <circle class="progress-ring__circle" id="timer-progress-circle" stroke="#0d9488" stroke-width="8" fill="transparent" r="65" cx="75" cy="75"/>
                         </svg>
                         <div class="timer-display">
                             <span class="timer-label">NEXT TRANSMISSION</span>
-                            <span class="timer-countdown" id="countdown-timer">03:00</span>
-                            <span class="timer-sub" id="next-tx-time">Calculated...</span>
+                            <span class="timer-countdown" id="countdown-timer">01:26</span>
+                            <span class="timer-sub" id="next-tx-time">Target: 5:22:09 PM</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Transmission Action Controls -->
-                <div class="tx-actions">
-                    <button class="btn btn-primary btn-send-now" id="btn-send-now">
-                        <i class="fa-solid fa-paper-plane"></i> SEND LATEST DATA NOW
-                    </button>
-                </div>
+                <!-- Send Now Button -->
+                <button class="btn-send-now" id="btn-send-now">
+                    <i class="fa-solid fa-paper-plane"></i> SEND LATEST DATA NOW
+                </button>
 
-                <!-- Demo Speed Interval Selector -->
-                <div class="interval-selector-box">
+                <!-- Interval Selector -->
+                <div class="interval-box">
                     <label for="interval-select"><i class="fa-solid fa-stopwatch"></i> Transmission Interval:</label>
                     <select id="interval-select" class="form-control">
                         <option value="180" selected>3 Minutes (180s) - Standard Mode</option>
@@ -231,109 +505,43 @@
                     </select>
                 </div>
 
-                <!-- Transmission Log & Diagnostics -->
+                <!-- Diagnostics Box -->
                 <div class="tx-diagnostics">
                     <div class="diag-row">
-                        <span class="diag-label">Transmission Mode:</span>
-                        <span class="diag-val" id="diag-mode">LOCAL SERVER</span>
+                        <span class="diag-label">Hospital Server API:</span>
+                        <span class="diag-val" id="diag-server-url">Supabase Cloud HTTPS</span>
                     </div>
                     <div class="diag-row">
-                        <span class="diag-label">Target Endpoint:</span>
-                        <span class="diag-val" id="diag-server-url">http://localhost:5000</span>
-                    </div>
-                    <div class="diag-row">
-                        <span class="diag-label">Connection Status:</span>
+                        <span class="diag-label">Server Connection:</span>
                         <span class="diag-val online" id="diag-conn-status"><i class="fa-solid fa-circle"></i> Connected</span>
                     </div>
                     <div class="diag-row">
                         <span class="diag-label">Last Transmission:</span>
-                        <span class="diag-val" id="diag-last-tx">Never</span>
+                        <span class="diag-val" id="diag-last-tx">4:44:56 PM</span>
                     </div>
                     <div class="diag-row">
                         <span class="diag-label">Status Result:</span>
-                        <span class="diag-val status-text" id="diag-last-status">Awaiting First Interval</span>
+                        <span class="diag-val" id="diag-last-status">SUCCESS (ID: 4)</span>
                     </div>
                     <div class="diag-row">
                         <span class="diag-label">Total Transmissions:</span>
-                        <span class="diag-val" id="diag-total-sent">0 Records</span>
+                        <span class="diag-val" id="diag-total-sent">3 Records</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Supabase Cloud Internet Configuration Card -->
-            <div class="card cloud-config-card">
-                <div class="card-header">
-                    <h3><i class="fa-solid fa-cloud-bolt text-teal"></i> Supabase Cloud Internet Mode</h3>
+            <!-- Kaggle Dataset Card -->
+            <div class="card">
+                <div class="card-header" style="margin-bottom: 0.5rem;">
+                    <h3><i class="fa-solid fa-file-csv"></i> Kaggle Dataset & Hardware Interface</h3>
                 </div>
-                <div class="cloud-controls">
-                    <div class="form-group mb-2">
-                        <label for="mode-select"><i class="fa-solid fa-network-wired"></i> Transmission Target Mode:</label>
-                        <select id="mode-select" class="form-control">
-                            <option value="LOCAL">Local REST API (Single Wi-Fi Network)</option>
-                            <option value="SUPABASE">Supabase Cloud Database (Internet Mode)</option>
-                        </select>
-                    </div>
-
-                    <div id="supabase-input-group" class="supabase-fields">
-                        <div class="form-group mb-2">
-                            <label for="input-supabase-url">Supabase Project URL:</label>
-                            <input type="text" id="input-supabase-url" class="form-control" placeholder="https://xyz.supabase.co">
-                        </div>
-                        <div class="form-group mb-2">
-                            <label for="input-supabase-key">Supabase Anon Key:</label>
-                            <input type="password" id="input-supabase-key" class="form-control" placeholder="eyJhY... (Supabase API Key)">
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn btn-secondary btn-sm" id="btn-save-supabase">Save Supabase Config</button>
-                            <button class="btn btn-outline btn-sm" id="btn-test-supabase"><i class="fa-solid fa-plug-circle-check"></i> Test Cloud Connection</button>
-                        </div>
-                        <small class="help-text">Allows Laptop 1 (Ambulance) and Laptop 2 (Hospital) to communicate securely anywhere in the world over the Internet via Supabase Cloud.</small>
-                    </div>
-
-                    <div id="local-input-group" class="local-fields">
-                        <label for="input-server-ip"><i class="fa-solid fa-wifi"></i> Hospital Server IP / URL:</label>
-                        <div class="input-group">
-                            <input type="text" id="input-server-ip" value="http://localhost:5000" class="form-control" placeholder="http://192.168.1.50:5000">
-                            <button class="btn btn-secondary" id="btn-save-server-ip">Save</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CSV Dataset & Hardware Expansion Panel -->
-            <div class="card dataset-card">
-                <div class="card-header">
-                    <h3><i class="fa-solid fa-file-csv"></i> Offline Kaggle CSV Dataset</h3>
-                </div>
-                <div class="dataset-controls">
-                    <p class="dataset-desc">
-                        Select or upload a Kaggle CSV dataset. The simulator sequentially steps through records to emulate continuous patient monitoring.
-                    </p>
-
-                    <div class="file-upload-box">
-                        <input type="file" id="csv-file-input" accept=".csv" class="file-input">
-                        <button class="btn btn-outline" onclick="document.getElementById('csv-file-input').click()">
-                            <i class="fa-solid fa-upload"></i> Upload Custom CSV Dataset
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Future Hardware Integration Explanatory Card -->
-            <div class="card hardware-info-card">
-                <div class="card-header">
-                    <h3><i class="fa-solid fa-microchip"></i> Future Hardware Expansion</h3>
-                </div>
-                <div class="hardware-box">
-                    <p>Designed with modular <code>BaseSensorInterface</code> architecture.</p>
-                    <ul class="sensor-list">
-                        <li><i class="fa-solid fa-check text-teal"></i> ECG / Heart Rate (AD8232 module)</li>
-                        <li><i class="fa-solid fa-check text-teal"></i> SpO2 Pulse Oximeter (MAX30102)</li>
-                        <li><i class="fa-solid fa-check text-teal"></i> NIBP Blood Pressure Sensor</li>
-                        <li><i class="fa-solid fa-check text-teal"></i> Body Temp (LM35 / DS18B20)</li>
-                    </ul>
-                    <p class="hardware-note"><i class="fa-solid fa-plug"></i> Plug-and-play via USB/Serial microcontroller without changing dashboard UI.</p>
-                </div>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                    Select or upload an offline Kaggle CSV dataset. The simulator steps through records sequentially to emulate continuous monitoring.
+                </p>
+                <input type="file" id="csv-file-input" accept=".csv" class="file-input">
+                <button class="btn btn-outline" style="width: 100%;" onclick="document.getElementById('csv-file-input').click()">
+                    <i class="fa-solid fa-upload"></i> Upload Custom CSV Dataset
+                </button>
             </div>
 
         </aside>
@@ -342,15 +550,221 @@
 
     <!-- Medical Footer Disclaimer -->
     <footer class="app-footer">
-        <div class="footer-content">
-            <p><strong>SMART-MED Academic Emergency Telemetry Prototype</strong> &bull; Biomed X (Session 2026–27)</p>
-            <p class="disclaimer-text">
-                "SMART-MED is an academic prototype for patient-data monitoring and communication. It is not a medical device and must not be used for clinical diagnosis or treatment."
-            </p>
-        </div>
+        <p><strong>SMART-MED Academic Emergency Telemetry Prototype</strong> &bull; Biomed X (Session 2026–27)</p>
+        <p class="disclaimer-text">
+            "SMART-MED is an academic prototype for patient-data monitoring and communication. It is not a medical device and must not be used for clinical diagnosis or treatment."
+        </p>
     </footer>
 
-    <!-- Custom JS -->
-    <script src="{{ url_for('static', filename='js/ambulance.js') }}"></script>
+    <!-- JS Client Engine -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const elId = document.getElementById('p-id');
+            const elName = document.getElementById('p-name');
+            const elDemographics = document.getElementById('p-demographics');
+            const elFrame = document.getElementById('p-frame');
+            const elLastUpdate = document.getElementById('p-last-update');
+            const elBanner = document.getElementById('status-banner');
+            const elStatusTitle = document.getElementById('status-title');
+            const elTriageLevel = document.getElementById('triage-level');
+            const elStatusReasons = document.getElementById('status-reasons');
+
+            const elValHr = document.getElementById('val-hr');
+            const elTagHr = document.getElementById('tag-hr');
+            const elValSpo2 = document.getElementById('val-spo2');
+            const elTagSpo2 = document.getElementById('tag-spo2');
+            const elValBp = document.getElementById('val-bp');
+            const elValSys = document.getElementById('val-sys');
+            const elValDia = document.getElementById('val-dia');
+            const elValTemp = document.getElementById('val-temp');
+            const elTagTemp = document.getElementById('tag-temp');
+            const elValRr = document.getElementById('val-rr');
+            const elTagRr = document.getElementById('tag-rr');
+
+            const elCountdownTimer = document.getElementById('countdown-timer');
+            const elNextTxTime = document.getElementById('next-tx-time');
+            const elProgressCircle = document.getElementById('timer-progress-circle');
+            const elBtnSendNow = document.getElementById('btn-send-now');
+            const elIntervalSelect = document.getElementById('interval-select');
+
+            const elDiagLastTx = document.getElementById('diag-last-tx');
+            const elDiagLastStatus = document.getElementById('diag-last-status');
+            const elDiagTotalSent = document.getElementById('diag-total-sent');
+
+            let currentInterval = 180;
+            let timeRemaining = 180;
+            let timerId = null;
+            let isTransmitting = false;
+
+            const circleRadius = 65;
+            const circleCircumference = 2 * Math.PI * circleRadius;
+            if (elProgressCircle) {
+                elProgressCircle.style.strokeDasharray = `${circleCircumference} ${circleCircumference}`;
+                elProgressCircle.style.strokeDashoffset = 0;
+            }
+
+            const ctx = document.getElementById('ambulanceChart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Heart Rate (BPM)', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.08)', borderWidth: 2, tension: 0.3, fill: true, yAxisID: 'y-hr' },
+                        { label: 'SpO2 (%)', data: [], borderColor: '#0284c7', backgroundColor: 'rgba(2, 132, 199, 0.08)', borderWidth: 2, tension: 0.3, fill: false, yAxisID: 'y-spo2' },
+                        { label: 'Body Temp (°C)', data: [], borderColor: '#f59e0b', borderWidth: 2, tension: 0.3, fill: false, yAxisID: 'y-temp' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 400 },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 10, family: 'JetBrains Mono' } } },
+                        'y-hr': { type: 'linear', position: 'left', min: 40, max: 180 },
+                        'y-spo2': { type: 'linear', position: 'right', min: 75, max: 100, grid: { display: false } },
+                        'y-temp': { type: 'linear', position: 'right', display: false, min: 34, max: 42 }
+                    },
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } } }
+                }
+            });
+
+            function updateProgressRing(secondsLeft, totalInterval) {
+                if (!elProgressCircle) return;
+                const progress = secondsLeft / totalInterval;
+                const offset = circleCircumference - (progress * circleCircumference);
+                elProgressCircle.style.strokeDashoffset = offset;
+            }
+
+            function formatTime(seconds) {
+                const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const s = (seconds % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            }
+
+            async function fetchVitals() {
+                try {
+                    const res = await fetch('/api/vitals');
+                    if (!res.ok) return;
+                    const data = await res.json();
+
+                    elId.textContent = data.patient_id || 'SM002';
+                    elName.textContent = data.patient_name || 'Demo Patient 2';
+                    elDemographics.textContent = `${data.age} Yrs / ${data.gender}`;
+                    elFrame.textContent = `Record ${data.record_index + 1} / ${data.total_records}`;
+                    
+                    const nowTime = new Date();
+                    elLastUpdate.textContent = nowTime.toLocaleTimeString();
+
+                    const status = data.status || 'NORMAL';
+                    elStatusTitle.textContent = `${status} PATIENT CONDITION`;
+                    elTriageLevel.textContent = data.emergency_level || 'LEVEL 3 - GREEN (STABLE PATIENT CONDITION)';
+                    elStatusReasons.textContent = (data.reasons && data.reasons.length) ? data.reasons.join(' | ') : 'All vital signs within normal range.';
+
+                    elBanner.className = 'status-banner';
+                    if (status === 'CRITICAL') elBanner.classList.add('status-critical');
+                    else if (status === 'WARNING') elBanner.classList.add('status-warning');
+                    else elBanner.classList.add('status-normal');
+
+                    elValHr.textContent = data.heart_rate;
+                    elValSpo2.textContent = data.spo2;
+                    elValBp.textContent = data.blood_pressure;
+                    elValSys.textContent = data.systolic_bp;
+                    elValDia.textContent = data.diastolic_bp;
+                    elValTemp.textContent = data.temperature;
+                    elValRr.textContent = data.respiratory_rate;
+
+                    if (data.last_transmission_time) elDiagLastTx.textContent = new Date(data.last_transmission_time).toLocaleTimeString();
+                    if (data.last_transmission_status) elDiagLastStatus.textContent = data.last_transmission_status;
+                    elDiagTotalSent.textContent = `${data.total_transmissions_sent} Records`;
+
+                    const timeLabel = nowTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    chart.data.labels.push(timeLabel);
+                    chart.data.datasets[0].data.push(data.heart_rate);
+                    chart.data.datasets[1].data.push(data.spo2);
+                    chart.data.datasets[2].data.push(data.temperature);
+
+                    if (chart.data.labels.length > 15) {
+                        chart.data.labels.shift();
+                        chart.data.datasets[0].data.shift();
+                        chart.data.datasets[1].data.shift();
+                        chart.data.datasets[2].data.shift();
+                    }
+                    chart.update();
+
+                } catch (err) {
+                    console.warn("Failed to fetch vitals frame:", err);
+                }
+            }
+
+            function startCountdownEngine() {
+                if (timerId) clearInterval(timerId);
+
+                timerId = setInterval(() => {
+                    timeRemaining--;
+                    if (timeRemaining <= 0) {
+                        timeRemaining = currentInterval;
+                        triggerAutoTransmission();
+                    }
+
+                    elCountdownTimer.textContent = formatTime(timeRemaining);
+                    updateProgressRing(timeRemaining, currentInterval);
+
+                    const nextTxDate = new Date(Date.now() + timeRemaining * 1000);
+                    elNextTxTime.textContent = `Target: ${nextTxDate.toLocaleTimeString()}`;
+                }, 1000);
+            }
+
+            async function triggerAutoTransmission() {
+                if (isTransmitting) return;
+                isTransmitting = true;
+                elDiagLastStatus.textContent = "TRANSMITTING TELEMETRY...";
+
+                try {
+                    const res = await fetch('/api/transmit_now', { method: 'POST' });
+                    const data = await res.json();
+                    if (data.success) elDiagLastStatus.textContent = "SUCCESSFUL TRANSMISSION";
+                    else elDiagLastStatus.textContent = "TRANSMISSION FAILED";
+                } catch (e) {
+                    elDiagLastStatus.textContent = "NETWORK ERROR";
+                } finally {
+                    isTransmitting = false;
+                    fetchVitals();
+                }
+            }
+
+            elBtnSendNow.addEventListener('click', async () => {
+                elBtnSendNow.disabled = true;
+                elBtnSendNow.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> TRANSMITTING...`;
+
+                await triggerAutoTransmission();
+
+                timeRemaining = currentInterval;
+                elCountdownTimer.textContent = formatTime(timeRemaining);
+                updateProgressRing(timeRemaining, currentInterval);
+
+                setTimeout(() => {
+                    elBtnSendNow.disabled = false;
+                    elBtnSendNow.innerHTML = `<i class="fa-solid fa-paper-plane"></i> SEND LATEST DATA NOW`;
+                }, 1000);
+            });
+
+            elIntervalSelect.addEventListener('change', async (e) => {
+                currentInterval = parseInt(e.target.value, 10);
+                timeRemaining = currentInterval;
+                elCountdownTimer.textContent = formatTime(timeRemaining);
+                updateProgressRing(timeRemaining, currentInterval);
+
+                await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ transmission_interval: currentInterval })
+                });
+            });
+
+            fetchVitals();
+            setInterval(fetchVitals, 2000);
+            startCountdownEngine();
+        });
+    </script>
 </body>
 </html>

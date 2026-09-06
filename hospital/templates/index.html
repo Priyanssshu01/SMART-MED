@@ -3,36 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMART-MED | Hospital Receiving Telemetry Dashboard</title>
+    <title>SMART-MED | Hospital Receiving Dashboard</title>
+    
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- 100% Pixel-Perfect Match CSS for Target UI -->
+    <style>
+        :root {
+            --bg-body: #f4f6f9;
+            --bg-card: #ffffff;
+            --text-dark: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --teal-primary: #0d9488;
+            --medical-blue: #0284c7;
+            --status-green: #10b981;
+            --status-green-bg: #ecfdf5;
+            --status-warning: #f59e0b;
+            --status-warning-bg: #fffbeb;
+            --status-red: #ef4444;
+            --status-red-bg: #fef2f2;
+            --border-color: #e2e8f0;
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-header {
+            background: #092540;
+            color: #ffffff;
+            padding: 0.85rem 1.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .header-left { display: flex; align-items: center; gap: 1.25rem; }
+        .brand-logo { display: flex; align-items: center; gap: 0.75rem; }
+        .brand-logo i { font-size: 1.8rem; color: #38bdf8; }
+        .brand-text h1 { font-size: 1.35rem; font-weight: 800; color: #ffffff; line-height: 1.1; }
+        .sub-brand { font-size: 0.72rem; color: #94a3b8; font-weight: 500; }
+        
+        .system-badges { display: flex; gap: 0.5rem; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+        }
+        .badge-hospital { background: rgba(2, 132, 199, 0.25); color: #38bdf8; border: 1px solid rgba(2, 132, 199, 0.5); }
+        .badge-cloud { background: rgba(13, 148, 136, 0.25); color: #2dd4bf; border: 1px solid rgba(13, 148, 136, 0.5); }
+
+        .header-right .user-box { font-size: 0.78rem; color: #cbd5e1; font-weight: 600; display: flex; align-items: center; gap: 1rem; }
+        .btn-logout { color: #7dd3fc; text-decoration: none; font-size: 0.75rem; font-weight: 700; }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 1.25rem;
+            padding: 1.25rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .card-header h3 { font-size: 0.95rem; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 0.5rem; }
+        .card-header h3 i { color: var(--medical-blue); }
+
+        .patient-card { margin-bottom: 1.25rem; }
+        .status-pill-online { font-size: 0.72rem; font-weight: 700; color: var(--status-green); background: var(--status-green-bg); padding: 0.25rem 0.65rem; border-radius: 6px; }
+
+        .patient-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; padding-top: 0.25rem; }
+        .p-item { display: flex; flex-direction: column; }
+        .p-label { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.2rem; }
+        .p-value { font-size: 0.95rem; font-weight: 800; color: var(--text-dark); }
+        .p-value.time-blue { color: var(--medical-blue); font-family: var(--font-mono); }
+
+        .status-banner {
+            border-radius: 10px;
+            padding: 1.1rem 1.35rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--status-green-bg);
+            border-left: 6px solid var(--status-green);
+        }
+
+        .status-normal { background: var(--status-green-bg); border-left-color: var(--status-green); }
+        .status-warning { background: var(--status-warning-bg); border-left-color: var(--status-warning); }
+        .status-critical { background: var(--status-red-bg); border-left-color: var(--status-red); animation: pulse-border 1.5s infinite; }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .status-left { display: flex; align-items: center; gap: 1rem; }
+        .status-indicator { width: 14px; height: 14px; border-radius: 50%; background: var(--status-green); flex-shrink: 0; }
+        .status-text-group { display: flex; flex-direction: column; }
+        .status-title { font-size: 1.05rem; font-weight: 800; color: var(--text-dark); text-transform: uppercase; line-height: 1.2; }
+        .triage-level { font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin-top: 0.15rem; }
+        .status-reasons { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.15rem; }
+
+        .disclaimer-box {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.85);
+            padding: 0.5rem 0.85rem;
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.06);
+            max-width: 290px;
+            line-height: 1.35;
+        }
+
+        .vitals-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.85rem; margin-bottom: 1.25rem; }
+        .vital-card { background: #ffffff; border-radius: 10px; border: 1px solid var(--border-color); padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; }
+        .vital-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+        .vital-name { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 0.35rem; }
+        .vital-unit { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); }
+
+        .vital-body { display: flex; justify-content: space-between; align-items: baseline; margin: 0.4rem 0; }
+        .vital-value { font-family: var(--font-sans); font-size: 2.3rem; font-weight: 800; color: var(--text-dark); line-height: 1; }
+
+        .vital-tag { font-size: 0.62rem; font-weight: 800; padding: 0.15rem 0.45rem; border-radius: 4px; background: #e2e8f0; color: #475569; }
+        .tag-green { background: #d1fae5; color: #065f46; }
+        .tag-yellow { background: var(--status-warning-bg); color: #92400e; }
+        .tag-red { background: var(--status-red-bg); color: #991b1b; }
+
+        .vital-footer { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 0.4rem; margin-top: 0.4rem; }
+        .icon-hr { color: #ef4444; }
+        .icon-spo2 { color: #0284c7; }
+        .icon-bp { color: #8b5cf6; }
+        .icon-temp { color: #f59e0b; }
+        .icon-rr { color: #10b981; }
+
+        .table-card { overflow: hidden; }
+        .table-responsive { width: 100%; overflow-x: auto; }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left; }
+        .history-table th { background: #f1f5f9; color: var(--text-secondary); font-weight: 700; padding: 0.6rem 0.75rem; border-bottom: 2px solid var(--border-color); text-transform: uppercase; font-size: 0.68rem; }
+        .history-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border-color); color: var(--text-dark); font-family: var(--font-mono); }
+        .history-table tr:hover { background: #f8fafc; }
+        .row-critical { background: #fef2f2 !important; font-weight: 700; }
+        .row-warning { background: #fffbeb !important; }
+
+        .chart-card { height: 320px; display: flex; flex-direction: column; }
+        .chart-container { flex: 1; position: relative; width: 100%; height: 100%; }
+
+        .sidebar-section { display: flex; flex-direction: column; gap: 1.25rem; }
+
+        .timer-widget { display: flex; justify-content: center; padding: 1.25rem 0; }
+        .countdown-circle { position: relative; width: 150px; height: 150px; }
+        .progress-ring__circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
+
+        .timer-display { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .timer-label { font-size: 0.62rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+        .timer-countdown { font-family: var(--font-mono); font-size: 2.1rem; font-weight: 800; color: var(--medical-blue); line-height: 1.1; margin: 0.1rem 0; }
+        .timer-sub { font-size: 0.68rem; color: var(--text-secondary); }
+
+        .hosp-diagnostics { background: #f8fafc; border-radius: 6px; padding: 0.75rem; border: 1px solid var(--border-color); font-size: 0.75rem; }
+        .diag-row { display: flex; justify-content: space-between; padding: 0.3rem 0; }
+        .diag-row:not(:last-child) { border-bottom: 1px dashed var(--border-color); }
+        .diag-label { font-weight: 600; color: var(--text-secondary); }
+        .diag-val { font-family: var(--font-mono); font-weight: 700; color: var(--text-dark); }
+        .diag-val.online { color: var(--status-green); }
+
+        .app-footer { background: #092540; color: #cbd5e1; text-align: center; padding: 1rem; font-size: 0.78rem; border-top: 1px solid #1e293b; margin-top: auto; }
+        .disclaimer-text { font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem; font-style: italic; }
+
+        @media (max-width: 1200px) {
+            .patient-grid { grid-template-columns: repeat(3, 1fr); }
+            .vitals-grid { grid-template-columns: repeat(3, 1fr); }
+            .main-container { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
     <!-- Top Header Bar -->
     <header class="top-header">
         <div class="header-left">
             <div class="brand-logo">
-                <i class="fa-solid fa-hospital-user pulse-icon text-hospital"></i>
+                <i class="fa-solid fa-hospital-user pulse-icon"></i>
                 <div class="brand-text">
                     <h1>HOSPITAL RECEIVING DASHBOARD</h1>
                     <span class="sub-brand">SMART-MED Inbound Emergency Patient Telemetry Monitoring</span>
                 </div>
             </div>
             <div class="system-badges">
-                <span class="badge badge-hospital"><i class="fa-solid fa-hospital"></i> HOSPITAL SIDE (LAPTOP 2)</span>
-                <span class="badge badge-simulated" id="hosp-mode-badge"><i class="fa-solid fa-wifi"></i> MODE: LOCAL SERVER</span>
+                <span class="badge badge-hospital"><i class="fa-solid fa-hospital"></i> HOSPITAL SIDE</span>
+                <span class="badge badge-cloud"><i class="fa-solid fa-cloud"></i> MODE: SUPABASE CLOUD</span>
             </div>
         </div>
         <div class="header-right">
-            <div class="team-info">
-                <span class="group-tag">Biomed X (Session 2026–27)</span>
-                <span class="team-leader"><i class="fa-solid fa-user-gear"></i> Leader: Sayandeep Chakroborty</span>
-                <span class="team-members">Uttam K. Mahto | Prashant K. | Priyanshu J.</span>
+            <div style="display: flex; gap: 0.5rem; background: rgba(255,255,255,0.1); padding: 0.25rem; border-radius: 8px; margin-right: 1rem;">
+                <a href="/ambulance" style="padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700; text-decoration: none; color: #cbd5e1; background: transparent;"><i class="fa-solid fa-truck-medical"></i> Ambulance Monitor</a>
+                <a href="/hospital" style="padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700; text-decoration: none; color: #ffffff; background: #0284c7; border: 1px solid rgba(255,255,255,0.2);"><i class="fa-solid fa-hospital-user"></i> Hospital Dashboard</a>
+            </div>
+            <div class="user-box">
+                <span><i class="fa-solid fa-user-doctor text-hospital"></i> {{ user.name if user else 'Dr. Hospital Specialist' }}</span>
             </div>
         </div>
     </header>
@@ -40,151 +240,148 @@
     <!-- Main Workspace Layout -->
     <div class="main-container">
         
-        <!-- Left Column: Patient Telemetry & Visual Analytics -->
+        <!-- Left Column: Patient Telemetry, History Table & Charts -->
         <main class="hosp-main-content">
             
-            <!-- Patient Identity & Hospital Reception Card -->
+            <!-- Patient Identity Card -->
             <div class="card patient-card">
                 <div class="card-header">
                     <h3><i class="fa-solid fa-bed-pulse"></i> Inbound Emergency Patient Metadata</h3>
-                    <span class="status-pill-online" id="connection-pill"><i class="fa-solid fa-circle"></i> SERVER CONNECTED</span>
+                    <span class="status-pill-online" id="connection-pill"><i class="fa-solid fa-circle"></i> SUPABASE CLOUD ACTIVE</span>
                 </div>
                 <div class="patient-grid">
                     <div class="p-item">
-                        <span class="p-label">Patient ID</span>
+                        <span class="p-label">PATIENT ID</span>
                         <span class="p-value" id="hosp-p-id">Awaiting Telemetry...</span>
                     </div>
                     <div class="p-item">
-                        <span class="p-label">Patient Name</span>
+                        <span class="p-label">PATIENT NAME</span>
                         <span class="p-value" id="hosp-p-name">--</span>
                     </div>
                     <div class="p-item">
-                        <span class="p-label">Age / Gender</span>
+                        <span class="p-label">AGE / GENDER</span>
                         <span class="p-value" id="hosp-p-demographics">--</span>
                     </div>
                     <div class="p-item">
-                        <span class="p-label">Time Received</span>
-                        <span class="p-value highlight-time" id="hosp-p-received-time">--:--:--</span>
+                        <span class="p-label">TIME RECEIVED</span>
+                        <span class="p-value time-blue" id="hosp-p-received-time">--:--:--</span>
                     </div>
                     <div class="p-item">
-                        <span class="p-label">Ambulance Source</span>
-                        <span class="p-value text-teal" id="hosp-p-source">Ambulance Unit 1</span>
+                        <span class="p-label">AMBULANCE SOURCE</span>
+                        <span class="p-value" style="color: var(--teal-primary);" id="hosp-p-source">Ambulance Telemetry</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Triage Status & Clinical Alert Banner -->
+            <!-- Triage Status Banner -->
             <div class="status-banner status-normal" id="hosp-status-banner">
                 <div class="status-left">
                     <div class="status-indicator" id="hosp-status-indicator"></div>
                     <div class="status-text-group">
                         <span class="status-title" id="hosp-status-title">AWAITING PATIENT TELEMETRY</span>
                         <span class="triage-level" id="hosp-triage-level">LEVEL 3 - GREEN (STABLE)</span>
-                        <div class="status-reasons" id="hosp-status-reasons">Connect Laptop 1 (Ambulance) to transmit live vital data.</div>
+                        <div class="status-reasons" id="hosp-status-reasons">Connect Ambulance to transmit live vital data.</div>
                     </div>
                 </div>
-                <div class="status-disclaimer-box">
+                <div class="disclaimer-box">
                     <i class="fa-solid fa-triangle-exclamation"></i>
                     <span><strong>ACADEMIC DISCLAIMER:</strong> SMART-MED is an academic prototype. Not for clinical diagnosis or treatment.</span>
                 </div>
             </div>
 
-            <!-- Inbound Vital Signs Display Cards -->
+            <!-- Inbound Vital Signs Cards -->
             <div class="vitals-grid">
                 
                 <!-- Heart Rate -->
-                <div class="card vital-card card-hr" id="vcard-hr">
+                <div class="vital-card">
                     <div class="vital-header">
                         <span class="vital-name"><i class="fa-solid fa-heart-pulse icon-hr"></i> Heart Rate</span>
                         <span class="vital-unit">BPM</span>
                     </div>
                     <div class="vital-body">
                         <div class="vital-value" id="hosp-val-hr">--</div>
-                        <div class="vital-status-tag" id="hosp-tag-hr">WAITING</div>
+                        <div class="vital-tag tag-green" id="hosp-tag-hr">WAITING</div>
                     </div>
                     <div class="vital-footer">
                         <span>Standard: 60 - 100</span>
-                        <span class="abnormal-alert-label" id="alert-hr">--</span>
+                        <span id="alert-hr">--</span>
                     </div>
                 </div>
 
                 <!-- SpO2 -->
-                <div class="card vital-card card-spo2" id="vcard-spo2">
+                <div class="vital-card">
                     <div class="vital-header">
                         <span class="vital-name"><i class="fa-solid fa-lungs icon-spo2"></i> SpO2 Saturation</span>
                         <span class="vital-unit">%</span>
                     </div>
                     <div class="vital-body">
                         <div class="vital-value" id="hosp-val-spo2">--</div>
-                        <div class="vital-status-tag" id="hosp-tag-spo2">WAITING</div>
+                        <div class="vital-tag tag-green" id="hosp-tag-spo2">WAITING</div>
                     </div>
                     <div class="vital-footer">
                         <span>Target: &ge; 95%</span>
-                        <span class="abnormal-alert-label" id="alert-spo2">--</span>
+                        <span id="alert-spo2">--</span>
                     </div>
                 </div>
 
                 <!-- Blood Pressure -->
-                <div class="card vital-card card-bp" id="vcard-bp">
+                <div class="vital-card">
                     <div class="vital-header">
                         <span class="vital-name"><i class="fa-solid fa-stethoscope icon-bp"></i> Blood Pressure</span>
                         <span class="vital-unit">mmHg</span>
                     </div>
                     <div class="vital-body">
                         <div class="vital-value" id="hosp-val-bp">--/--</div>
-                        <div class="vital-status-tag" id="hosp-tag-bp">WAITING</div>
+                        <div class="vital-tag tag-green" id="hosp-tag-bp">WAITING</div>
                     </div>
                     <div class="vital-footer">
                         <span>Target: 120/80</span>
-                        <span class="abnormal-alert-label" id="alert-bp">--</span>
+                        <span><i class="fa-solid fa-circle-question"></i></span>
                     </div>
                 </div>
 
                 <!-- Body Temperature -->
-                <div class="card vital-card card-temp" id="vcard-temp">
+                <div class="vital-card">
                     <div class="vital-header">
                         <span class="vital-name"><i class="fa-solid fa-temperature-three-quarters icon-temp"></i> Temperature</span>
                         <span class="vital-unit">&deg;C</span>
                     </div>
                     <div class="vital-body">
                         <div class="vital-value" id="hosp-val-temp">--</div>
-                        <div class="vital-status-tag" id="hosp-tag-temp">WAITING</div>
+                        <div class="vital-tag tag-green" id="hosp-tag-temp">WAITING</div>
                     </div>
                     <div class="vital-footer">
                         <span>Target: 36.5 - 37.5</span>
-                        <span class="abnormal-alert-label" id="alert-temp">--</span>
+                        <span><i class="fa-solid fa-thermometer"></i></span>
                     </div>
                 </div>
 
                 <!-- Respiratory Rate -->
-                <div class="card vital-card card-rr" id="vcard-rr">
+                <div class="vital-card">
                     <div class="vital-header">
                         <span class="vital-name"><i class="fa-solid fa-wind icon-rr"></i> Respiration Rate</span>
                         <span class="vital-unit">bpm</span>
                     </div>
                     <div class="vital-body">
                         <div class="vital-value" id="hosp-val-rr">--</div>
-                        <div class="vital-status-tag" id="hosp-tag-rr">WAITING</div>
+                        <div class="vital-tag tag-green" id="hosp-tag-rr">WAITING</div>
                     </div>
                     <div class="vital-footer">
                         <span>Target: 12 - 20</span>
-                        <span class="abnormal-alert-label" id="alert-rr">--</span>
+                        <span><i class="fa-solid fa-cloud"></i></span>
                     </div>
                 </div>
 
             </div>
 
-            <!-- Historical Transmissions Table -->
+            <!-- Historical Transmissions Table Card -->
             <div class="card table-card">
                 <div class="card-header">
                     <h3><i class="fa-solid fa-clock-rotate-left"></i> Historical Patient Telemetry Transmissions</h3>
-                    <div class="table-actions">
-                        <button class="btn btn-outline btn-sm" id="btn-refresh-history"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
-                        <button class="btn btn-outline btn-sm text-danger" id="btn-reset-history"><i class="fa-solid fa-trash-can"></i> Reset Log</button>
-                    </div>
+                    <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" id="btn-refresh-history"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
                 </div>
                 <div class="table-responsive">
-                    <table class="history-table" id="history-table">
+                    <table class="history-table">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -201,18 +398,21 @@
                         </thead>
                         <tbody id="history-tbody">
                             <tr>
-                                <td colspan="10" class="text-center text-muted">Awaiting initial 3-minute transmission from Ambulance (Laptop 1)...</td>
+                                <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                    <i class="fa-solid fa-satellite-dish fa-spin text-teal" style="font-size: 1.5rem;"></i><br>
+                                    Awaiting initial 3-minute telemetry payload from Ambulance...
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Hospital Telemetry Trend Chart -->
+            <!-- Hospital Telemetry Trend Chart Card -->
             <div class="card chart-card">
                 <div class="card-header">
                     <h3><i class="fa-solid fa-chart-area"></i> Inbound Telemetry Trend Analytics</h3>
-                    <span class="chart-legend-text">Hospital Patient Monitoring Record</span>
+                    <span style="font-size: 0.78rem; color: var(--text-muted);">Hospital Patient Monitoring Record</span>
                 </div>
                 <div class="chart-container">
                     <canvas id="hospitalChart"></canvas>
@@ -221,21 +421,20 @@
 
         </main>
 
-        <!-- Right Column: Expected Transmission Countdown & Server Diagnostics -->
+        <!-- Right Column Sidebar Component -->
         <aside class="sidebar-section">
             
-            <!-- Expected Transmission Timer Card -->
-            <div class="card countdown-card">
-                <div class="card-header border-bottom">
+            <div class="card">
+                <div class="card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
                     <h3><i class="fa-solid fa-hourglass-half"></i> Next Expected Telemetry</h3>
                     <span class="badge badge-hospital">3-MIN CYCLE</span>
                 </div>
                 
                 <div class="timer-widget">
                     <div class="countdown-circle">
-                        <svg class="progress-ring" width="160" height="160">
-                            <circle class="progress-ring__circle-bg" stroke="#e2e8f0" stroke-width="10" fill="transparent" r="70" cx="80" cy="80"/>
-                            <circle class="progress-ring__circle" id="hosp-progress-circle" stroke="#0284c7" stroke-width="10" fill="transparent" r="70" cx="80" cy="80"/>
+                        <svg class="progress-ring" width="150" height="150">
+                            <circle class="progress-ring__circle-bg" stroke="#e2e8f0" stroke-width="8" fill="transparent" r="65" cx="75" cy="75"/>
+                            <circle class="progress-ring__circle" id="hosp-progress-circle" stroke="#0284c7" stroke-width="8" fill="transparent" r="65" cx="75" cy="75"/>
                         </svg>
                         <div class="timer-display">
                             <span class="timer-label">EXPECTED IN</span>
@@ -248,10 +447,10 @@
                 <div class="hosp-diagnostics">
                     <div class="diag-row">
                         <span class="diag-label">Receiver Mode:</span>
-                        <span class="diag-val" id="hosp-diag-mode">LOCAL SERVER</span>
+                        <span class="diag-val">SUPABASE CLOUD</span>
                     </div>
                     <div class="diag-row">
-                        <span class="diag-label">API Status:</span>
+                        <span class="diag-label">Cloud API Status:</span>
                         <span class="diag-val online" id="hosp-api-status"><i class="fa-solid fa-check-circle"></i> ONLINE</span>
                     </div>
                     <div class="diag-row">
@@ -260,70 +459,267 @@
                     </div>
                     <div class="diag-row">
                         <span class="diag-label">Abnormal Vital Filter:</span>
-                        <span class="diag-val text-danger">Auto-Highlight Active</span>
+                        <span class="diag-val" style="color: var(--status-red);">Auto-Highlight Active</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Supabase Cloud Receiver Configuration Card -->
-            <div class="card cloud-receiver-card">
-                <div class="card-header">
-                    <h3><i class="fa-solid fa-cloud-arrow-down text-teal"></i> Supabase Cloud Internet Mode</h3>
+            <!-- Demo Guide Box -->
+            <div class="card" style="background: #f0f9ff; border-color: #bae6fd;">
+                <div class="card-header" style="margin-bottom: 0.5rem;">
+                    <h3><i class="fa-solid fa-graduation-cap"></i> Semester-5 Demo Guide</h3>
                 </div>
-                <div class="cloud-controls">
-                    <div class="form-group mb-2">
-                        <label for="hosp-mode-select"><i class="fa-solid fa-network-wired"></i> Receiver Mode:</label>
-                        <select id="hosp-mode-select" class="form-control">
-                            <option value="LOCAL">Local Server REST API (Wi-Fi)</option>
-                            <option value="SUPABASE">Supabase Cloud Database (Internet)</option>
-                        </select>
-                    </div>
-
-                    <div id="hosp-supabase-group" class="supabase-fields" style="display:none;">
-                        <div class="form-group mb-2">
-                            <label for="hosp-supabase-url">Supabase Project URL:</label>
-                            <input type="text" id="hosp-supabase-url" class="form-control" placeholder="https://xyz.supabase.co">
-                        </div>
-                        <div class="form-group mb-2">
-                            <label for="hosp-supabase-key">Supabase Anon Key:</label>
-                            <input type="password" id="hosp-supabase-key" class="form-control" placeholder="eyJhY... (Supabase API Key)">
-                        </div>
-                        <button class="btn btn-secondary btn-sm" id="btn-save-hosp-supabase">Connect Supabase Cloud</button>
-                        <small class="help-text">Allows Hospital Laptop 2 to receive patient telemetry from Ambulance Laptop 1 anywhere over the Internet.</small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Presentation Guide Card -->
-            <div class="card demo-guide-card">
-                <div class="card-header">
-                    <h3><i class="fa-solid fa-graduation-cap"></i> Semester-5 Presentation Guide</h3>
-                </div>
-                <div class="demo-steps">
-                    <ol class="step-list">
-                        <li><strong>Step 1:</strong> Configure Supabase URL & Key on Laptop 1 & Laptop 2.</li>
-                        <li><strong>Step 2:</strong> Set mode to <em>Supabase Cloud</em> on both laptops.</li>
-                        <li><strong>Step 3:</strong> Watch Laptop 1 auto-transmit over the Internet every 3 minutes.</li>
-                        <li><strong>Step 4:</strong> Watch telemetry instantly land on Laptop 2!</li>
-                    </ol>
-                </div>
+                <ol style="padding-left: 1.2rem; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.6;">
+                    <li>Sign in as <em>Ambulance Staff</em> on Laptop 1.</li>
+                    <li>Sign in as <em>Hospital Doctor</em> on Laptop 2.</li>
+                    <li>Watch Laptop 1 auto-transmit over the Internet every 3 minutes.</li>
+                    <li>Watch telemetry land on Laptop 2 live!</li>
+                </ol>
             </div>
 
         </aside>
 
     </div>
 
-    <!-- Medical Footer Disclaimer -->
     <footer class="app-footer">
-        <div class="footer-content">
-            <p><strong>SMART-MED Hospital Emergency Receiving Dashboard</strong> &bull; Biomed X (Session 2026–27)</p>
-            <p class="disclaimer-text">
-                "SMART-MED is an academic prototype for patient-data monitoring and communication. It is not a medical device and must not be used for clinical diagnosis or treatment."
-            </p>
-        </div>
+        <p><strong>SMART-MED Hospital Emergency Receiving Dashboard</strong> &bull; Biomed X (Session 2026–27)</p>
+        <p class="disclaimer-text">
+            "SMART-MED is an academic prototype for patient-data monitoring and communication. It is not a medical device and must not be used for clinical diagnosis or treatment."
+        </p>
     </footer>
 
-    <!-- Custom JS -->
-    <script src="{{ url_for('static', filename='js/hospital.js') }}"></script>
+    <!-- Bulletproof Inline Hospital JS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const elHospId = document.getElementById('hosp-p-id');
+            const elHospName = document.getElementById('hosp-p-name');
+            const elHospDemographics = document.getElementById('hosp-p-demographics');
+            const elHospReceivedTime = document.getElementById('hosp-p-received-time');
+            const elHospSource = document.getElementById('hosp-p-source');
+            const elConnectionPill = document.getElementById('connection-pill');
+
+            const elBanner = document.getElementById('hosp-status-banner');
+            const elStatusTitle = document.getElementById('hosp-status-title');
+            const elTriageLevel = document.getElementById('hosp-triage-level');
+            const elStatusReasons = document.getElementById('hosp-status-reasons');
+
+            const elValHr = document.getElementById('hosp-val-hr');
+            const elValSpo2 = document.getElementById('hosp-val-spo2');
+            const elValBp = document.getElementById('hosp-val-bp');
+            const elValTemp = document.getElementById('hosp-val-temp');
+            const elValRr = document.getElementById('hosp-val-rr');
+
+            const elHistoryTbody = document.getElementById('history-tbody');
+            const elBtnRefreshHistory = document.getElementById('btn-refresh-history');
+
+            const elHospCountdown = document.getElementById('hosp-countdown');
+            const elHospLastReceivedLabel = document.getElementById('hosp-last-received-label');
+            const elProgressCircle = document.getElementById('hosp-progress-circle');
+            const elTotalPackets = document.getElementById('hosp-total-packets');
+            const elApiStatus = document.getElementById('hosp-api-status');
+
+            let lastTransmissionId = null;
+            let expectedInterval = 180;
+            let timeRemaining = 180;
+            let countdownTimerId = null;
+
+            const circleRadius = 65;
+            const circleCircumference = 2 * Math.PI * circleRadius;
+            if (elProgressCircle) {
+                elProgressCircle.style.strokeDasharray = `${circleCircumference} ${circleCircumference}`;
+                elProgressCircle.style.strokeDashoffset = 0;
+            }
+
+            const ctx = document.getElementById('hospitalChart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Heart Rate (BPM)', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.08)', borderWidth: 2, tension: 0.3, fill: true, yAxisID: 'y-hr' },
+                        { label: 'SpO2 Saturation (%)', data: [], borderColor: '#0284c7', backgroundColor: 'rgba(2, 132, 199, 0.08)', borderWidth: 2, tension: 0.3, fill: false, yAxisID: 'y-spo2' },
+                        { label: 'Temperature (°C)', data: [], borderColor: '#f59e0b', borderWidth: 2, tension: 0.3, fill: false, yAxisID: 'y-temp' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 400 },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 10, family: 'JetBrains Mono' } } },
+                        'y-hr': { type: 'linear', position: 'left', min: 40, max: 180 },
+                        'y-spo2': { type: 'linear', position: 'right', min: 75, max: 100, grid: { display: false } },
+                        'y-temp': { type: 'linear', position: 'right', display: false, min: 34, max: 42 }
+                    },
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } } }
+                }
+            });
+
+            function updateProgressRing(secondsLeft, totalInterval) {
+                if (!elProgressCircle) return;
+                const progress = secondsLeft / totalInterval;
+                const offset = circleCircumference - (progress * circleCircumference);
+                elProgressCircle.style.strokeDashoffset = offset;
+            }
+
+            function formatTime(seconds) {
+                const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const s = (seconds % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            }
+
+            async function fetchLatestTelemetry() {
+                try {
+                    const res = await fetch('/api/hospital/latest');
+                    if (!res.ok) return;
+                    const result = await res.json();
+
+                    if (result.status === 'NO_DATA') {
+                        elHospId.textContent = 'Awaiting Telemetry...';
+                        elHospName.textContent = 'No ambulance payload yet';
+                        elHospReceivedTime.textContent = '--:--:--';
+                        return;
+                    }
+
+                    const data = result.data;
+                    if (!data) return;
+
+                    elConnectionPill.className = 'status-pill-online';
+                    elConnectionPill.innerHTML = `<i class="fa-solid fa-circle"></i> ACTIVE TELEMETRY`;
+                    elApiStatus.className = 'diag-val online';
+                    elApiStatus.innerHTML = `<i class="fa-solid fa-check-circle"></i> ONLINE`;
+
+                    if (data.id !== lastTransmissionId) {
+                        lastTransmissionId = data.id;
+                        timeRemaining = expectedInterval;
+                        elHospLastReceivedLabel.textContent = `Last: ${new Date(data.received_at).toLocaleTimeString()}`;
+                    }
+
+                    elHospId.textContent = data.patient_id || 'SM002';
+                    elHospName.textContent = data.patient_name || 'Demo Patient 2';
+                    elHospDemographics.textContent = `${data.age} Yrs / ${data.gender}`;
+                    elHospReceivedTime.textContent = new Date(data.received_at).toLocaleTimeString();
+                    elHospSource.textContent = data.data_source || 'Ambulance Telemetry';
+
+                    const status = data.patient_status || 'NORMAL';
+                    elStatusTitle.textContent = `${status} PATIENT CONDITION`;
+                    elTriageLevel.textContent = data.emergency_level || 'LEVEL 3 - GREEN (STABLE PATIENT CONDITION)';
+                    elStatusReasons.textContent = data.reasons || 'All vital signs normal.';
+
+                    elBanner.className = 'status-banner';
+                    if (status === 'CRITICAL') elBanner.classList.add('status-critical');
+                    else if (status === 'WARNING') elBanner.classList.add('status-warning');
+                    else elBanner.classList.add('status-normal');
+
+                    elValHr.textContent = data.heart_rate;
+                    elValSpo2.textContent = data.spo2;
+                    elValBp.textContent = data.blood_pressure || `${data.systolic_bp}/${data.diastolic_bp}`;
+                    elValTemp.textContent = data.temperature;
+                    elValRr.textContent = data.respiratory_rate;
+
+                } catch (err) {
+                    console.warn("Error querying receiver API:", err);
+                }
+            }
+
+            async function fetchTransmissionHistory() {
+                try {
+                    const res = await fetch('/api/hospital/history?limit=50');
+                    if (!res.ok) return;
+                    const result = await res.json();
+                    const history = result.history || [];
+
+                    elTotalPackets.textContent = `${result.count || history.length} Transmissions`;
+
+                    if (history.length === 0) {
+                        elHistoryTbody.innerHTML = `
+                            <tr>
+                                <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                    <i class="fa-solid fa-satellite-dish fa-spin text-teal" style="font-size: 1.5rem;"></i><br>
+                                    Awaiting initial 3-minute telemetry payload from Ambulance...
+                                </td>
+                            </tr>`;
+                        return;
+                    }
+
+                    let html = '';
+                    chart.data.labels = [];
+                    chart.data.datasets[0].data = [];
+                    chart.data.datasets[1].data = [];
+                    chart.data.datasets[2].data = [];
+
+                    const chronHistory = [...history].reverse();
+                    chronHistory.forEach(row => {
+                        const timeStr = new Date(row.received_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        chart.data.labels.push(timeStr);
+                        chart.data.datasets[0].data.push(row.heart_rate);
+                        chart.data.datasets[1].data.push(row.spo2);
+                        chart.data.datasets[2].data.push(row.temperature);
+                    });
+                    chart.update();
+
+                    history.forEach((row) => {
+                        const status = row.patient_status || 'NORMAL';
+                        let rowClass = '';
+                        let statusBadge = `<span class="vital-tag tag-green">NORMAL</span>`;
+
+                        if (status === 'CRITICAL') {
+                            rowClass = 'row-critical';
+                            statusBadge = `<span class="vital-tag tag-red"><i class="fa-solid fa-triangle-exclamation"></i> CRITICAL</span>`;
+                        } else if (status === 'WARNING') {
+                            rowClass = 'row-warning';
+                            statusBadge = `<span class="vital-tag tag-yellow">WARNING</span>`;
+                        }
+
+                        const receivedTime = new Date(row.received_at).toLocaleTimeString();
+
+                        html += `
+                            <tr class="${rowClass}">
+                                <td>#${row.id}</td>
+                                <td><strong>${receivedTime}</strong></td>
+                                <td>${row.patient_id}</td>
+                                <td class="${row.heart_rate > 100 ? 'text-danger font-bold' : ''}">${row.heart_rate} BPM</td>
+                                <td class="${row.spo2 < 92 ? 'text-danger font-bold' : ''}">${row.spo2}%</td>
+                                <td>${row.blood_pressure || `${row.systolic_bp}/${row.diastolic_bp}`}</td>
+                                <td>${row.temperature}°C</td>
+                                <td>${row.respiratory_rate} bpm</td>
+                                <td>${statusBadge}</td>
+                                <td><span style="color: var(--teal-primary); font-weight: 700;"><i class="fa-solid fa-circle-check"></i> RECEIVED</span></td>
+                            </tr>
+                        `;
+                    });
+
+                    elHistoryTbody.innerHTML = html;
+
+                } catch (err) {
+                    console.warn("Failed to fetch transmission history log:", err);
+                }
+            }
+
+            function startTimerLoop() {
+                if (countdownTimerId) clearInterval(countdownTimerId);
+
+                countdownTimerId = setInterval(() => {
+                    timeRemaining--;
+                    if (timeRemaining < 0) timeRemaining = expectedInterval;
+                    elHospCountdown.textContent = formatTime(timeRemaining);
+                    updateProgressRing(timeRemaining, expectedInterval);
+                }, 1000);
+            }
+
+            if (elBtnRefreshHistory) {
+                elBtnRefreshHistory.addEventListener('click', () => {
+                    fetchLatestTelemetry();
+                    fetchTransmissionHistory();
+                });
+            }
+
+            fetchLatestTelemetry();
+            fetchTransmissionHistory();
+            setInterval(fetchLatestTelemetry, 3000);
+            setInterval(fetchTransmissionHistory, 5000);
+            startTimerLoop();
+        });
+    </script>
 </body>
 </html>
