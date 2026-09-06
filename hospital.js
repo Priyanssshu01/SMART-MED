@@ -11,9 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const elHospReceivedTime = document.getElementById('hosp-p-received-time');
     const elHospSource = document.getElementById('hosp-p-source');
     const elConnectionPill = document.getElementById('connection-pill');
+    const elHospModeBadge = document.getElementById('hosp-mode-badge');
+    const elHospDiagMode = document.getElementById('hosp-diag-mode');
 
     // Status Banner
     const elBanner = document.getElementById('hosp-status-banner');
+    const elIndicatorDot = document.getElementById('hosp-status-indicator');
     const elStatusTitle = document.getElementById('hosp-status-title');
     const elTriageLevel = document.getElementById('hosp-triage-level');
     const elStatusReasons = document.getElementById('hosp-status-reasons');
@@ -44,6 +47,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // History Table & Actions
     const elHistoryTbody = document.getElementById('history-tbody');
     const elBtnRefreshHistory = document.getElementById('btn-refresh-history');
+    const elBtnResetHistory = document.getElementById('btn-reset-history');
+
+    // Supabase Cloud Controls
+    const elHospModeSelect = document.getElementById('hosp-mode-select');
+    const elHospSupabaseGroup = document.getElementById('hosp-supabase-group');
+    const elHospSupabaseUrl = document.getElementById('hosp-supabase-url');
+    const elHospSupabaseKey = document.getElementById('hosp-supabase-key');
+    const elBtnSaveHospSupabase = document.getElementById('btn-save-hosp-supabase');
 
     // Timer & Diagnostics
     const elHospCountdown = document.getElementById('hosp-countdown');
@@ -128,6 +139,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const progress = secondsLeft / totalInterval;
         const offset = circleCircumference - (progress * circleCircumference);
         elProgressCircle.style.strokeDashoffset = offset;
+    }
+
+    function toggleReceiverModeUI(mode) {
+        if (mode === 'SUPABASE') {
+            elHospSupabaseGroup.style.display = 'block';
+            elHospModeBadge.className = 'badge badge-cloud';
+            elHospModeBadge.innerHTML = `<i class="fa-solid fa-cloud"></i> MODE: SUPABASE CLOUD`;
+            elHospDiagMode.textContent = 'SUPABASE CLOUD (INTERNET)';
+        } else {
+            elHospSupabaseGroup.style.display = 'none';
+            elHospModeBadge.className = 'badge badge-simulated';
+            elHospModeBadge.innerHTML = `<i class="fa-solid fa-wifi"></i> MODE: LOCAL SERVER`;
+            elHospDiagMode.textContent = 'LOCAL REST API';
+        }
+    }
+
+    // Fetch Config on Startup
+    async function fetchHospConfig() {
+        try {
+            const res = await fetch('/api/hospital/config');
+            const data = await res.json();
+            const mode = data.mode || 'LOCAL';
+            elHospModeSelect.value = mode;
+            toggleReceiverModeUI(mode);
+
+            if (data.supabase_url) elHospSupabaseUrl.value = data.supabase_url;
+            if (data.supabase_key) elHospSupabaseKey.value = data.supabase_key;
+        } catch (e) {
+            console.warn("Could not fetch hospital config:", e);
+        }
     }
 
     // Fetch Latest Telemetry Payload
@@ -238,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tr>
                         <td colspan="10" class="text-center text-muted" style="padding: 2rem;">
                             <i class="fa-solid fa-satellite-dish fa-spin text-teal" style="font-size: 1.5rem;"></i><br>
-                            Awaiting initial 3-minute telemetry payload from Ambulance...
+                            Awaiting initial 3-minute telemetry payload from Ambulance (Laptop 1)...
                         </td>
                     </tr>`;
                 return;
@@ -299,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Countdown Timer Loop
+    // Countdown Timer for Next Expected Transmission
     function startTimerLoop() {
         if (countdownTimerId) clearInterval(countdownTimerId);
 
@@ -313,15 +354,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
+    // Mode Selection Listener
+    elHospModeSelect.addEventListener('change', async (e) => {
+        const mode = e.target.value;
+        toggleReceiverModeUI(mode);
+
+        await fetch('/api/hospital/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: mode })
+        });
+        fetchLatestTelemetry();
+        fetchTransmissionHistory();
+    });
+
+    // Save Supabase Credentials
+    elBtnSaveHospSupabase.addEventListener('click', async () => {
+        const url = elHospSupabaseUrl.value.trim();
+        const key = elHospSupabaseKey.value.trim();
+
+        await fetch('/api/hospital/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: 'SUPABASE', supabase_url: url, supabase_key: key })
+        });
+        alert("Hospital Supabase Cloud connection saved!");
+        fetchLatestTelemetry();
+        fetchTransmissionHistory();
+    });
+
     // Refresh History Button
-    if (elBtnRefreshHistory) {
-        elBtnRefreshHistory.addEventListener('click', () => {
+    elBtnRefreshHistory.addEventListener('click', () => {
+        fetchLatestTelemetry();
+        fetchTransmissionHistory();
+    });
+
+    // Reset History Button
+    elBtnResetHistory.addEventListener('click', async () => {
+        if (!confirm("Reset hospital transmission log history?")) return;
+
+        try {
+            const res = await fetch('/api/hospital/reset', { method: 'POST' });
+            const data = await res.json();
+            alert(data.message || "History reset.");
             fetchLatestTelemetry();
             fetchTransmissionHistory();
-        });
-    }
+        } catch (e) {
+            alert("Failed to reset history log.");
+        }
+    });
 
     // Initial Startup
+    fetchHospConfig();
     fetchLatestTelemetry();
     fetchTransmissionHistory();
 

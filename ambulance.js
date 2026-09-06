@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Status Banner
     const elBanner = document.getElementById('status-banner');
+    const elIndicatorDot = document.getElementById('status-indicator-dot');
     const elStatusTitle = document.getElementById('status-title');
     const elTriageLevel = document.getElementById('triage-level');
     const elStatusReasons = document.getElementById('status-reasons');
@@ -39,15 +40,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const elBtnSendNow = document.getElementById('btn-send-now');
     const elIntervalSelect = document.getElementById('interval-select');
 
+    const elHeaderModeBadge = document.getElementById('header-mode-badge');
+    const elDiagMode = document.getElementById('diag-mode');
+    const elDiagServerUrl = document.getElementById('diag-server-url');
+    const elDiagConnStatus = document.getElementById('diag-conn-status');
     const elDiagLastTx = document.getElementById('diag-last-tx');
     const elDiagLastStatus = document.getElementById('diag-last-status');
     const elDiagTotalSent = document.getElementById('diag-total-sent');
+
+    // Cloud Mode Controls
+    const elModeSelect = document.getElementById('mode-select');
+    const elSupabaseInputGroup = document.getElementById('supabase-input-group');
+    const elLocalInputGroup = document.getElementById('local-input-group');
+    const elInputSupabaseUrl = document.getElementById('input-supabase-url');
+    const elInputSupabaseKey = document.getElementById('input-supabase-key');
+    const elBtnSaveSupabase = document.getElementById('btn-save-supabase');
+    const elBtnTestSupabase = document.getElementById('btn-test-supabase');
+
+    const elInputServerIp = document.getElementById('input-server-ip');
+    const elBtnSaveServerIp = document.getElementById('btn-save-server-ip');
     const elCsvFileInput = document.getElementById('csv-file-input');
 
     // Timer State
     let currentInterval = 180; // Default 3 minutes (180s)
     let timeRemaining = 180;
     let timerId = null;
+    let latestVitalsCache = null;
     let isTransmitting = false;
 
     // SVG Circle Radius Math
@@ -123,12 +141,29 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${m}:${s}`;
     }
 
-    // Fetch Vitals from Backend
+    function toggleModeUI(mode) {
+        if (mode === 'SUPABASE') {
+            elSupabaseInputGroup.style.display = 'block';
+            elLocalInputGroup.style.display = 'none';
+            elHeaderModeBadge.className = 'badge badge-cloud';
+            elHeaderModeBadge.innerHTML = `<i class="fa-solid fa-cloud"></i> MODE: SUPABASE CLOUD`;
+            elDiagMode.textContent = 'SUPABASE CLOUD (INTERNET)';
+        } else {
+            elSupabaseInputGroup.style.display = 'none';
+            elLocalInputGroup.style.display = 'block';
+            elHeaderModeBadge.className = 'badge badge-simulated';
+            elHeaderModeBadge.innerHTML = `<i class="fa-solid fa-network-wired"></i> MODE: LOCAL SERVER`;
+            elDiagMode.textContent = 'LOCAL REST API';
+        }
+    }
+
+    // Fetch Vitals from Ambulance Backend Simulation
     async function fetchVitals() {
         try {
             const res = await fetch('/api/vitals');
             if (!res.ok) throw new Error('Backend offline');
             const data = await res.json();
+            latestVitalsCache = data;
 
             // Render Patient Card
             elId.textContent = data.patient_id || 'P-7842';
@@ -139,6 +174,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const nowTime = new Date();
             elLastUpdate.textContent = nowTime.toLocaleTimeString();
             elDataSourceTag.innerHTML = `<i class="fa-solid fa-database"></i> ${data.data_source || 'SIMULATED DATA'}`;
+
+            // Mode & Endpoint UI
+            const mode = data.mode_type || 'LOCAL';
+            elModeSelect.value = mode;
+            toggleModeUI(mode);
+
+            if (mode === 'SUPABASE') {
+                elDiagServerUrl.textContent = data.supabase_url || 'https://xyz.supabase.co';
+                if (!elInputSupabaseUrl.value) elInputSupabaseUrl.value = data.supabase_url || '';
+                if (!elInputSupabaseKey.value) elInputSupabaseKey.value = data.supabase_key || '';
+            } else {
+                elDiagServerUrl.textContent = data.server_url;
+                elInputServerIp.value = data.server_url;
+            }
 
             // Render Status Banner
             const status = data.status || 'NORMAL';
@@ -195,6 +244,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (err) {
             console.warn("Failed to fetch vitals frame:", err);
+            elDiagConnStatus.className = "diag-val offline";
+            elDiagConnStatus.innerHTML = `<i class="fa-solid fa-circle"></i> Local App Offline`;
         }
     }
 
@@ -211,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Auto Transmission Loop
+    // Auto Transmission Engine & Countdown Loop
     function startCountdownEngine() {
         if (timerId) clearInterval(timerId);
 
@@ -242,11 +293,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.success) {
                 elDiagLastStatus.textContent = "SUCCESSFUL TRANSMISSION";
+                elDiagConnStatus.className = "diag-val online";
+                elDiagConnStatus.innerHTML = `<i class="fa-solid fa-circle"></i> Connected`;
             } else {
                 elDiagLastStatus.textContent = "TRANSMISSION FAILED";
+                elDiagConnStatus.className = "diag-val offline";
+                elDiagConnStatus.innerHTML = `<i class="fa-solid fa-circle"></i> Destination Unreachable`;
             }
         } catch (e) {
             elDiagLastStatus.textContent = "NETWORK ERROR";
+            elDiagConnStatus.className = "diag-val offline";
+            elDiagConnStatus.innerHTML = `<i class="fa-solid fa-circle"></i> Disconnected`;
         } finally {
             isTransmitting = false;
             fetchVitals();
@@ -270,6 +327,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     });
 
+    // Mode Selector (LOCAL vs SUPABASE)
+    elModeSelect.addEventListener('change', async (e) => {
+        const mode = e.target.value;
+        toggleModeUI(mode);
+
+        await fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: mode })
+        });
+        fetchVitals();
+    });
+
+    // Save Supabase Configuration
+    elBtnSaveSupabase.addEventListener('click', async () => {
+        const url = elInputSupabaseUrl.value.trim();
+        const key = elInputSupabaseKey.value.trim();
+
+        const res = await fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: 'SUPABASE', supabase_url: url, supabase_key: key })
+        });
+        const data = await res.json();
+        alert("Supabase Cloud credentials saved successfully!");
+        fetchVitals();
+    });
+
+    // Test Supabase Connection Button
+    elBtnTestSupabase.addEventListener('click', async () => {
+        const url = elInputSupabaseUrl.value.trim();
+        const key = elInputSupabaseKey.value.trim();
+
+        elBtnTestSupabase.disabled = true;
+        elBtnTestSupabase.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Testing...`;
+
+        try {
+            const res = await fetch('/api/test_supabase', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ supabase_url: url, supabase_key: key })
+            });
+            const result = await res.json();
+            if (result.success) {
+                alert(`✅ SUPABASE CLOUD CONNECTED:\n${result.message}`);
+            } else {
+                alert(`❌ SUPABASE CONNECTION FAILED:\n${result.message}`);
+            }
+        } catch (e) {
+            alert(`Network Error testing Supabase: ${e.message}`);
+        } finally {
+            elBtnTestSupabase.disabled = false;
+            elBtnTestSupabase.innerHTML = `<i class="fa-solid fa-plug-circle-check"></i> Test Cloud Connection`;
+        }
+    });
+
     // Interval Selector (180s, 60s, 30s, 10s)
     elIntervalSelect.addEventListener('change', async (e) => {
         currentInterval = parseInt(e.target.value, 10);
@@ -284,29 +397,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // CSV File Upload
-    if (elCsvFileInput) {
-        elCsvFileInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+    // Save Hospital Local IP Config
+    elBtnSaveServerIp.addEventListener('click', async () => {
+        const newUrl = elInputServerIp.value.trim();
+        if (!newUrl) return;
 
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                const res = await fetch('/api/upload_csv', { method: 'POST', body: formData });
-                const data = await res.json();
-                if (res.ok) {
-                    alert(`Dataset Loaded: ${data.message}`);
-                    fetchVitals();
-                } else {
-                    alert(`Upload Error: ${data.error}`);
-                }
-            } catch (err) {
-                alert(`File upload failed: ${err.message}`);
-            }
+        const res = await fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: 'LOCAL', server_url: newUrl })
         });
-    }
+        const data = await res.json();
+        alert(`Hospital Local IP updated to: ${data.config.server_url}`);
+        fetchVitals();
+    });
+
+    // CSV File Upload
+    elCsvFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await fetch('/api/upload_csv', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (res.ok) {
+                alert(`Dataset Loaded: ${data.message}`);
+                fetchVitals();
+            } else {
+                alert(`Upload Error: ${data.error}`);
+            }
+        } catch (err) {
+            alert(`File upload failed: ${err.message}`);
+        }
+    });
 
     // Initial Startup
     fetchVitals();
