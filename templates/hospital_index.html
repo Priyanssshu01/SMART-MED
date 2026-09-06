@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART-MED | Hospital Receiving Telemetry Dashboard</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Top Header Bar -->
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-logo">
+                <i class="fa-solid fa-hospital-user pulse-icon text-hospital"></i>
+                <div class="brand-text">
+                    <h1>HOSPITAL RECEIVING DASHBOARD</h1>
+                    <span class="sub-brand">SMART-MED Inbound Emergency Patient Telemetry Monitoring</span>
+                </div>
+            </div>
+            <div class="system-badges">
+                <span class="badge badge-hospital"><i class="fa-solid fa-hospital"></i> HOSPITAL SIDE</span>
+                <span class="badge badge-cloud" id="hosp-mode-badge"><i class="fa-solid fa-cloud"></i> MODE: SUPABASE CLOUD</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="team-info">
+                <span class="group-tag"><i class="fa-solid fa-user-doctor"></i> {{ user.name if user else 'Dr. Hospital Specialist' }}</span>
+                <a href="{{ url_for('logout') }}" class="btn-logout-link" style="color: #7dd3fc; font-size: 0.75rem; text-decoration: none; font-weight: 700; margin-top: 0.2rem;"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <div class="main-container">
+        
+        <!-- Left Column: Patient Telemetry & Visual Analytics -->
+        <main class="hosp-main-content">
+            
+            <!-- Patient Identity & Hospital Reception Card -->
+            <div class="card patient-card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-bed-pulse"></i> Inbound Emergency Patient Metadata</h3>
+                    <span class="status-pill-online" id="connection-pill"><i class="fa-solid fa-circle"></i> SUPABASE CLOUD ACTIVE</span>
+                </div>
+                <div class="patient-grid">
+                    <div class="p-item">
+                        <span class="p-label">Patient ID</span>
+                        <span class="p-value" id="hosp-p-id">Awaiting Telemetry...</span>
+                    </div>
+                    <div class="p-item">
+                        <span class="p-label">Patient Name</span>
+                        <span class="p-value" id="hosp-p-name">--</span>
+                    </div>
+                    <div class="p-item">
+                        <span class="p-label">Age / Gender</span>
+                        <span class="p-value" id="hosp-p-demographics">--</span>
+                    </div>
+                    <div class="p-item">
+                        <span class="p-label">Time Received</span>
+                        <span class="p-value highlight-time" id="hosp-p-received-time">--:--:--</span>
+                    </div>
+                    <div class="p-item">
+                        <span class="p-label">Ambulance Source</span>
+                        <span class="p-value text-teal" id="hosp-p-source">Ambulance Telemetry</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Triage Status & Clinical Alert Banner -->
+            <div class="status-banner status-normal" id="hosp-status-banner">
+                <div class="status-left">
+                    <div class="status-indicator" id="hosp-status-indicator"></div>
+                    <div class="status-text-group">
+                        <span class="status-title" id="hosp-status-title">AWAITING PATIENT TELEMETRY</span>
+                        <span class="triage-level" id="hosp-triage-level">LEVEL 3 - GREEN (STABLE)</span>
+                        <div class="status-reasons" id="hosp-status-reasons">Connect Ambulance to transmit live vital data.</div>
+                    </div>
+                </div>
+                <div class="status-disclaimer-box">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span><strong>ACADEMIC DISCLAIMER:</strong> SMART-MED is an academic prototype. Not for clinical diagnosis or treatment.</span>
+                </div>
+            </div>
+
+            <!-- Inbound Vital Signs Display Cards -->
+            <div class="vitals-grid">
+                
+                <!-- Heart Rate -->
+                <div class="card vital-card card-hr" id="vcard-hr">
+                    <div class="vital-header">
+                        <span class="vital-name"><i class="fa-solid fa-heart-pulse icon-hr"></i> Heart Rate</span>
+                        <span class="vital-unit">BPM</span>
+                    </div>
+                    <div class="vital-body">
+                        <div class="vital-value" id="hosp-val-hr">--</div>
+                        <div class="vital-status-tag" id="hosp-tag-hr">WAITING</div>
+                    </div>
+                    <div class="vital-footer">
+                        <span>Standard: 60 - 100</span>
+                        <span class="abnormal-alert-label" id="alert-hr">--</span>
+                    </div>
+                </div>
+
+                <!-- SpO2 -->
+                <div class="card vital-card card-spo2" id="vcard-spo2">
+                    <div class="vital-header">
+                        <span class="vital-name"><i class="fa-solid fa-lungs icon-spo2"></i> SpO2 Saturation</span>
+                        <span class="vital-unit">%</span>
+                    </div>
+                    <div class="vital-body">
+                        <div class="vital-value" id="hosp-val-spo2">--</div>
+                        <div class="vital-status-tag" id="hosp-tag-spo2">WAITING</div>
+                    </div>
+                    <div class="vital-footer">
+                        <span>Target: &ge; 95%</span>
+                        <span class="abnormal-alert-label" id="alert-spo2">--</span>
+                    </div>
+                </div>
+
+                <!-- Blood Pressure -->
+                <div class="card vital-card card-bp" id="vcard-bp">
+                    <div class="vital-header">
+                        <span class="vital-name"><i class="fa-solid fa-stethoscope icon-bp"></i> Blood Pressure</span>
+                        <span class="vital-unit">mmHg</span>
+                    </div>
+                    <div class="vital-body">
+                        <div class="vital-value" id="hosp-val-bp">--/--</div>
+                        <div class="vital-status-tag" id="hosp-tag-bp">WAITING</div>
+                    </div>
+                    <div class="vital-footer">
+                        <span>Target: 120/80</span>
+                        <span class="abnormal-alert-label" id="alert-bp">--</span>
+                    </div>
+                </div>
+
+                <!-- Body Temperature -->
+                <div class="card vital-card card-temp" id="vcard-temp">
+                    <div class="vital-header">
+                        <span class="vital-name"><i class="fa-solid fa-temperature-three-quarters icon-temp"></i> Temperature</span>
+                        <span class="vital-unit">&deg;C</span>
+                    </div>
+                    <div class="vital-body">
+                        <div class="vital-value" id="hosp-val-temp">--</div>
+                        <div class="vital-status-tag" id="hosp-tag-temp">WAITING</div>
+                    </div>
+                    <div class="vital-footer">
+                        <span>Target: 36.5 - 37.5</span>
+                        <span class="abnormal-alert-label" id="alert-temp">--</span>
+                    </div>
+                </div>
+
+                <!-- Respiratory Rate -->
+                <div class="card vital-card card-rr" id="vcard-rr">
+                    <div class="vital-header">
+                        <span class="vital-name"><i class="fa-solid fa-wind icon-rr"></i> Respiration Rate</span>
+                        <span class="vital-unit">bpm</span>
+                    </div>
+                    <div class="vital-body">
+                        <div class="vital-value" id="hosp-val-rr">--</div>
+                        <div class="vital-status-tag" id="hosp-tag-rr">WAITING</div>
+                    </div>
+                    <div class="vital-footer">
+                        <span>Target: 12 - 20</span>
+                        <span class="abnormal-alert-label" id="alert-rr">--</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Historical Transmissions Table -->
+            <div class="card table-card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-clock-rotate-left"></i> Historical Patient Telemetry Transmissions</h3>
+                    <div class="table-actions">
+                        <button class="btn btn-outline btn-sm" id="btn-refresh-history"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="history-table" id="history-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Timestamp</th>
+                                <th>Patient ID</th>
+                                <th>Heart Rate</th>
+                                <th>SpO2 (%)</th>
+                                <th>Blood Pressure</th>
+                                <th>Temp (°C)</th>
+                                <th>Resp Rate</th>
+                                <th>Emergency Status</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-tbody">
+                            <tr>
+                                <td colspan="10" class="text-center text-muted">Awaiting initial 3-minute transmission from Ambulance...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Hospital Telemetry Trend Chart -->
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-chart-area"></i> Inbound Telemetry Trend Analytics</h3>
+                    <span class="chart-legend-text">Hospital Patient Monitoring Record</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="hospitalChart"></canvas>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Right Column: Expected Transmission Countdown & Server Diagnostics -->
+        <aside class="sidebar-section">
+            
+            <!-- Expected Transmission Timer Card -->
+            <div class="card countdown-card">
+                <div class="card-header border-bottom">
+                    <h3><i class="fa-solid fa-hourglass-half"></i> Next Expected Telemetry</h3>
+                    <span class="badge badge-hospital">3-MIN CYCLE</span>
+                </div>
+                
+                <div class="timer-widget">
+                    <div class="countdown-circle">
+                        <svg class="progress-ring" width="160" height="160">
+                            <circle class="progress-ring__circle-bg" stroke="#e2e8f0" stroke-width="10" fill="transparent" r="70" cx="80" cy="80"/>
+                            <circle class="progress-ring__circle" id="hosp-progress-circle" stroke="#0284c7" stroke-width="10" fill="transparent" r="70" cx="80" cy="80"/>
+                        </svg>
+                        <div class="timer-display">
+                            <span class="timer-label">EXPECTED IN</span>
+                            <span class="timer-countdown" id="hosp-countdown">03:00</span>
+                            <span class="timer-sub" id="hosp-last-received-label">Last: Waiting...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hosp-diagnostics">
+                    <div class="diag-row">
+                        <span class="diag-label">Receiver Mode:</span>
+                        <span class="diag-val" id="hosp-diag-mode">SUPABASE CLOUD (INTERNET)</span>
+                    </div>
+                    <div class="diag-row">
+                        <span class="diag-label">Cloud API Status:</span>
+                        <span class="diag-val online" id="hosp-api-status"><i class="fa-solid fa-check-circle"></i> ONLINE</span>
+                    </div>
+                    <div class="diag-row">
+                        <span class="diag-label">Total Received Packets:</span>
+                        <span class="diag-val" id="hosp-total-packets">0 Transmissions</span>
+                    </div>
+                    <div class="diag-row">
+                        <span class="diag-label">Abnormal Vital Filter:</span>
+                        <span class="diag-val text-danger">Auto-Highlight Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Presentation Guide Card -->
+            <div class="card demo-guide-card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-graduation-cap"></i> Semester-5 Presentation Guide</h3>
+                </div>
+                <div class="demo-steps">
+                    <ol class="step-list">
+                        <li><strong>Step 1:</strong> Sign in as <em>Ambulance Staff</em> on Laptop 1.</li>
+                        <li><strong>Step 2:</strong> Sign in as <em>Hospital Doctor</em> on Laptop 2.</li>
+                        <li><strong>Step 3:</strong> Watch Laptop 1 auto-transmit over the Internet every 3 minutes.</li>
+                        <li><strong>Step 4:</strong> Watch telemetry instantly land on Laptop 2!</li>
+                    </ol>
+                </div>
+            </div>
+
+        </aside>
+
+    </div>
+
+    <!-- Medical Footer Disclaimer -->
+    <footer class="app-footer">
+        <div class="footer-content">
+            <p><strong>SMART-MED Hospital Emergency Receiving Dashboard</strong> &bull; Biomed X (Session 2026–27)</p>
+            <p class="disclaimer-text">
+                "SMART-MED is an academic prototype for patient-data monitoring and communication. It is not a medical device and must not be used for clinical diagnosis or treatment."
+            </p>
+        </div>
+    </footer>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/hospital.js') }}"></script>
+</body>
+</html>
