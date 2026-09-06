@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART-MED | Emergency Telemetry System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary-teal: #0d9488;
+            --medical-blue: #0284c7;
+            --font-sans: 'Inter', system-ui, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .header-bar {
+            background: #0b1120;
+            padding: 1.2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+        }
+
+        .brand { display: flex; align-items: center; gap: 0.85rem; }
+        .brand i { font-size: 2rem; color: var(--primary-teal); }
+        .brand h1 { font-size: 1.4rem; font-weight: 800; }
+
+        .team-tag {
+            font-size: 0.8rem;
+            color: var(--primary-teal);
+            font-weight: 700;
+            background: rgba(13, 148, 136, 0.15);
+            padding: 0.3rem 0.75rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(13, 148, 136, 0.3);
+        }
+
+        .portal-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 1.5rem;
+            flex: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .portal-title-box {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .portal-title-box h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .portal-title-box p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .portal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.75rem;
+            width: 100%;
+        }
+
+        .portal-card {
+            background: var(--card-bg);
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.25s ease;
+        }
+
+        .portal-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .portal-card.card-ambulance:hover {
+            border-color: var(--primary-teal);
+        }
+
+        .portal-card.card-hospital:hover {
+            border-color: var(--medical-blue);
+        }
+
+        .card-icon {
+            font-size: 2.8rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .icon-ambulance { color: #5eead4; }
+        .icon-hospital { color: #38bdf8; }
+
+        .card-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            margin-bottom: 0.4rem;
+        }
+
+        .card-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-launch {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+        }
+
+        .btn-amb { background: var(--primary-teal); color: #fff; }
+        .btn-hosp { background: var(--medical-blue); color: #fff; }
+
+        .footer-bar {
+            background: #0b1120;
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border-top: 1px solid #334155;
+        }
+
+        @media (max-width: 768px) {
+            .portal-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <div class="brand">
+            <i class="fa-solid fa-house-medical-pulse"></i>
+            <div>
+                <h1>SMART-MED</h1>
+                <small style="color: var(--text-muted); font-size: 0.72rem;">Emergency Telemetry & Patient Monitoring Portal</small>
+            </div>
+        </div>
+        <span class="team-tag"><i class="fa-solid fa-microchip"></i> Biomed X (Session 2026–27)</span>
+    </header>
+
+    <div class="portal-wrapper">
+        <div class="portal-title-box">
+            <h2>Select Telemetry Module</h2>
+            <p>Choose your dedicated operational portal to launch patient monitoring over the Internet.</p>
+        </div>
+
+        <div class="portal-grid">
+            
+            <!-- Ambulance Portal -->
+            <a href="/ambulance-login" class="portal-card card-ambulance">
+                <div>
+                    <i class="fa-solid fa-truck-medical card-icon icon-ambulance"></i>
+                    <div class="card-title">Ambulance Telemetry Monitor</div>
+                    <div class="card-desc">
+                        Laptop 1 Portal: Continuously monitors patient vitals in ambulance and transmits to hospital every 3 minutes over Supabase Cloud.
+                    </div>
+                </div>
+                <span class="btn-launch btn-amb"><i class="fa-solid fa-ambulance"></i> Open Ambulance Portal &rarr;</span>
+            </a>
+
+            <!-- Hospital Portal -->
+            <a href="/hospital-login" class="portal-card card-hospital">
+                <div>
+                    <i class="fa-solid fa-hospital-user card-icon icon-hospital"></i>
+                    <div class="card-title">Hospital Receiving Dashboard</div>
+                    <div class="card-desc">
+                        Laptop 2 Portal: Receives live inbound patient telemetry, clinical alerts, historical logs, and trend analytics over the Internet.
+                    </div>
+                </div>
+                <span class="btn-launch btn-hosp"><i class="fa-solid fa-hospital"></i> Open Hospital Portal &rarr;</span>
+            </a>
+
+        </div>
+    </div>
+
+    <footer class="footer-bar">
+        <p><strong>SMART-MED Academic Emergency Telemetry System</strong> &bull; Group: Biomed X</p>
+        <p style="font-size: 0.7rem; margin-top: 0.2rem; color: #64748b;">
+            "SMART-MED is an academic prototype. Not for clinical diagnosis or treatment."
+        </p>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART-MED | Hospital Specialist Receiving Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-main: #092540;
+            --card-bg: #0f3459;
+            --text-primary: #f8fafc;
+            --text-muted: #94a3b8;
+            --medical-blue: #38bdf8;
+            --font-sans: 'Inter', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .header-bar {
+            background: #06192b;
+            padding: 1.2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1e4976;
+        }
+
+        .brand { display: flex; align-items: center; gap: 0.85rem; }
+        .brand i { font-size: 2rem; color: var(--medical-blue); }
+        .brand h1 { font-size: 1.4rem; font-weight: 800; }
+
+        .login-wrapper { display: flex; justify-content: center; align-items: center; padding: 2rem 1rem; flex: 1; }
+        .login-card { background: var(--card-bg); border: 1px solid #1e4976; border-radius: 16px; width: 100%; max-width: 420px; padding: 2.25rem; }
+        .login-title-box { text-align: center; margin-bottom: 1.75rem; }
+        .login-title-box h2 { font-size: 1.5rem; font-weight: 800; color: #7dd3fc; }
+        .login-title-box p { font-size: 0.85rem; color: var(--text-muted); }
+
+        .error-alert { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; padding: 0.75rem; border-radius: 8px; font-size: 0.82rem; margin-bottom: 1.25rem; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.4rem; color: #cbd5e1; }
+        .input-box { position: relative; }
+        .input-box i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        .form-control { width: 100%; padding: 0.75rem 1rem 0.75rem 2.6rem; border-radius: 8px; border: 1px solid #1e4976; background: #092540; color: #fff; font-size: 0.9rem; }
+        .btn-submit { width: 100%; padding: 0.85rem; border-radius: 8px; border: none; background: #0284c7; color: #fff; font-weight: 700; font-size: 0.95rem; cursor: pointer; margin-top: 1.25rem; }
+        
+        .hint-box { background: #092540; border: 1px solid #1e4976; border-radius: 8px; padding: 0.75rem; font-size: 0.75rem; margin-top: 1.25rem; text-align: center; color: #94a3b8; }
+        .footer-bar { background: #06192b; padding: 1rem; text-align: center; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid #1e4976; }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <div class="brand">
+            <i class="fa-solid fa-hospital-user"></i>
+            <div>
+                <h1>HOSPITAL RECEIVING PORTAL</h1>
+                <small style="color: var(--text-muted); font-size: 0.72rem;">SMART-MED Specialist Emergency Reception Unit</small>
+            </div>
+        </div>
+    </header>
+
+    <div class="login-wrapper">
+        <div class="login-card">
+            
+            <div class="login-title-box">
+                <h2><i class="fa-solid fa-user-doctor"></i> Hospital Doctor Sign In</h2>
+                <p>Enter Hospital Specialist credentials to view inbound patient telemetry.</p>
+            </div>
+
+            {% if error %}
+            <div class="error-alert">
+                <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
+            </div>
+            {% endif %}
+
+            <form action="/hospital-login" method="POST">
+                <div class="form-group">
+                    <label for="username">Doctor / Specialist ID</label>
+                    <div class="input-box">
+                        <i class="fa-solid fa-id-badge"></i>
+                        <input type="text" id="username" name="username" class="form-control" value="hospital" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-box">
+                        <i class="fa-solid fa-key"></i>
+                        <input type="password" id="password" name="password" class="form-control" value="hospital123" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fa-solid fa-right-to-bracket"></i> Open Hospital Receiving Dashboard
+                </button>
+            </form>
+
+            <div class="hint-box">
+                🔑 Default Credentials: <strong>hospital</strong> / <strong>hospital123</strong>
+            </div>
+
+        </div>
+    </div>
+
+    <footer class="footer-bar">
+        <p><strong>SMART-MED Academic Emergency Telemetry System</strong> &bull; Group: Biomed X</p>
+    </footer>
+
+</body>
+</html>
