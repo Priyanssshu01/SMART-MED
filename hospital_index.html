@@ -9,8 +9,239 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Bulletproof Inline Hospital Stylesheet -->
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --primary-teal: #0d9488;
+            --medical-blue: #0284c7;
+            --status-normal: #10b981;
+            --status-normal-bg: #ecfdf5;
+            --status-warning: #f59e0b;
+            --status-warning-bg: #fffbeb;
+            --status-critical: #ef4444;
+            --status-critical-bg: #fef2f2;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Styling */
+        .top-header {
+            background: #092540;
+            color: #ffffff;
+            padding: 1rem 1.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        .header-left { display: flex; align-items: center; gap: 1.5rem; }
+        .brand-logo { display: flex; align-items: center; gap: 0.85rem; }
+        .text-hospital { color: #38bdf8 !important; }
+
+        .brand-text h1 {
+            font-size: 1.45rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+            line-height: 1.1;
+        }
+
+        .sub-brand { font-size: 0.75rem; color: #94a3b8; font-weight: 500; }
+        .system-badges { display: flex; gap: 0.5rem; }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.3rem 0.65rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+        }
+
+        .badge-hospital { background: rgba(2, 132, 199, 0.25); color: #38bdf8; border: 1px solid rgba(2, 132, 199, 0.5); }
+        .badge-cloud { background: rgba(13, 148, 136, 0.25); color: #2dd4bf; border: 1px solid rgba(13, 148, 136, 0.5); }
+
+        .header-right .team-info { display: flex; flex-direction: column; align-items: flex-end; font-size: 0.78rem; color: #cbd5e1; }
+        .group-tag { font-weight: 700; color: #7dd3fc; }
+
+        /* Main Container Layout */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            flex: 1;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Card Styling */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+
+        .card-header h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-header h3 i { color: var(--medical-blue); }
+        .border-bottom { border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; }
+        .status-pill-online { font-size: 0.72rem; font-weight: 700; color: var(--status-normal); background: var(--status-normal-bg); padding: 0.25rem 0.6rem; border-radius: var(--radius-sm); }
+
+        /* Patient Card */
+        .patient-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; }
+        .p-item { display: flex; flex-direction: column; }
+        .p-label { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
+        .p-value { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
+        .highlight-time { font-family: var(--font-mono); color: var(--medical-blue); }
+        .text-teal { color: var(--primary-teal); }
+        .text-danger { color: var(--status-critical); }
+
+        /* Status Banner */
+        .status-banner {
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 6px solid var(--status-normal);
+            transition: all 0.3s ease;
+        }
+
+        .status-normal { background: var(--status-normal-bg); border-left-color: var(--status-normal); }
+        .status-warning { background: var(--status-warning-bg); border-left-color: var(--status-warning); }
+        .status-critical { background: var(--status-critical-bg); border-left-color: var(--status-critical); animation: pulse-border 1.5s infinite; }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .status-left { display: flex; align-items: center; gap: 1rem; }
+        .status-indicator { width: 16px; height: 16px; border-radius: 50%; background: var(--status-normal); }
+        .status-title { font-size: 1.05rem; font-weight: 800; text-transform: uppercase; }
+        .triage-level { font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); }
+        .status-reasons { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.15rem; }
+
+        .status-disclaimer-box {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.7);
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(0,0,0,0.08);
+            max-width: 280px;
+        }
+
+        /* Vitals Cards */
+        .vitals-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+        .vital-card { display: flex; flex-direction: column; justify-content: space-between; }
+        .vital-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .vital-name { font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 0.4rem; }
+        .vital-unit { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
+        .vital-body { display: flex; justify-content: space-between; align-items: baseline; margin: 0.5rem 0; }
+        .vital-value { font-family: var(--font-mono); font-size: 2.2rem; font-weight: 800; line-height: 1; color: var(--text-primary); }
+        .vital-status-tag { font-size: 0.65rem; font-weight: 800; padding: 0.15rem 0.4rem; border-radius: 4px; background: #e2e8f0; color: #475569; }
+
+        .tag-normal { background: #d1fae5; color: #065f46; }
+        .tag-warning { background: #fef3c7; color: #92400e; }
+        .tag-critical { background: #fee2e2; color: #991b1b; }
+
+        .vital-card.card-alert-pulse { animation: alert-pulse-bg 1.2s infinite alternate; border-color: var(--status-critical); }
+        @keyframes alert-pulse-bg { from { background-color: #ffffff; } to { background-color: #fef2f2; } }
+
+        .vital-footer { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 0.4rem; margin-top: 0.4rem; }
+        .abnormal-alert-label { font-weight: 700; color: var(--status-critical); }
+
+        /* Historical Table */
+        .table-card { overflow: hidden; }
+        .table-responsive { width: 100%; overflow-x: auto; }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left; }
+        .history-table th { background: #f1f5f9; color: var(--text-secondary); font-weight: 700; padding: 0.65rem 0.75rem; border-bottom: 2px solid var(--border-color); text-transform: uppercase; font-size: 0.7rem; }
+        .history-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--border-color); color: var(--text-primary); font-family: var(--font-mono); }
+        .history-table tr:hover { background: #f8fafc; }
+        .row-critical { background: #fef2f2 !important; font-weight: 700; }
+        .row-warning { background: #fffbeb !important; }
+
+        .table-actions { display: flex; gap: 0.5rem; }
+        .btn-sm { padding: 0.35rem 0.65rem; font-size: 0.75rem; }
+
+        /* Chart Container */
+        .chart-card { height: 320px; display: flex; flex-direction: column; }
+        .chart-container { flex: 1; position: relative; width: 100%; height: 100%; }
+
+        /* Sidebar & Timer */
+        .sidebar-section { display: flex; flex-direction: column; gap: 1.25rem; }
+        .timer-widget { display: flex; justify-content: center; padding: 1rem 0; }
+        .countdown-circle { position: relative; width: 160px; height: 160px; }
+
+        .timer-display { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .timer-label { font-size: 0.65rem; font-weight: 800; color: var(--text-muted); letter-spacing: 0.05em; }
+        .timer-countdown { font-family: var(--font-mono); font-size: 2rem; font-weight: 800; color: var(--medical-blue); line-height: 1.1; }
+        .timer-sub { font-size: 0.68rem; color: var(--text-secondary); margin-top: 0.2rem; }
+
+        .hosp-diagnostics { background: #f8fafc; border-radius: var(--radius-sm); padding: 0.75rem; border: 1px solid var(--border-color); font-size: 0.75rem; }
+        .diag-row { display: flex; justify-content: space-between; padding: 0.25rem 0; }
+        .diag-row:not(:last-child) { border-bottom: 1px dashed var(--border-color); }
+        .diag-label { font-weight: 600; color: var(--text-secondary); }
+        .diag-val { font-family: var(--font-mono); font-weight: 600; color: var(--text-primary); }
+        .diag-val.online { color: var(--status-normal); }
+
+        .demo-guide-card { background: #f0f9ff; border-color: #bae6fd; }
+        .step-list { padding-left: 1.2rem; font-size: 0.78rem; color: var(--text-secondary); }
+        .step-list li { margin-bottom: 0.4rem; }
+
+        .btn { border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s ease; }
+        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
+        .btn-outline:hover { background: #f1f5f9; }
+
+        .app-footer { background: #092540; color: #cbd5e1; text-align: center; padding: 1rem 1.5rem; font-size: 0.78rem; border-top: 1px solid #1e293b; margin-top: auto; }
+        .disclaimer-text { font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem; font-style: italic; }
+
+        @media (max-width: 1024px) { .main-container { grid-template-columns: 1fr; } }
+    </style>
 </head>
 <body>
     <!-- Top Header Bar -->
@@ -292,7 +523,247 @@
         </div>
     </footer>
 
-    <!-- Custom JS -->
-    <script src="{{ url_for('static', filename='js/hospital.js') }}"></script>
+    <!-- Bulletproof Inline Hospital JS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const elHospId = document.getElementById('hosp-p-id');
+            const elHospName = document.getElementById('hosp-p-name');
+            const elHospDemographics = document.getElementById('hosp-p-demographics');
+            const elHospReceivedTime = document.getElementById('hosp-p-received-time');
+            const elHospSource = document.getElementById('hosp-p-source');
+            const elConnectionPill = document.getElementById('connection-pill');
+
+            const elBanner = document.getElementById('hosp-status-banner');
+            const elStatusTitle = document.getElementById('hosp-status-title');
+            const elTriageLevel = document.getElementById('hosp-triage-level');
+            const elStatusReasons = document.getElementById('hosp-status-reasons');
+
+            const elValHr = document.getElementById('hosp-val-hr');
+            const elTagHr = document.getElementById('hosp-tag-hr');
+            const elAlertHr = document.getElementById('alert-hr');
+            const elVcardHr = document.getElementById('vcard-hr');
+
+            const elValSpo2 = document.getElementById('hosp-val-spo2');
+            const elTagSpo2 = document.getElementById('hosp-tag-spo2');
+            const elAlertSpo2 = document.getElementById('alert-spo2');
+            const elVcardSpo2 = document.getElementById('vcard-spo2');
+
+            const elValBp = document.getElementById('hosp-val-bp');
+            const elValTemp = document.getElementById('hosp-val-temp');
+            const elTagTemp = document.getElementById('hosp-tag-temp');
+            const elValRr = document.getElementById('hosp-val-rr');
+
+            const elHistoryTbody = document.getElementById('history-tbody');
+            const elBtnRefreshHistory = document.getElementById('btn-refresh-history');
+
+            const elHospCountdown = document.getElementById('hosp-countdown');
+            const elHospLastReceivedLabel = document.getElementById('hosp-last-received-label');
+            const elProgressCircle = document.getElementById('hosp-progress-circle');
+            const elTotalPackets = document.getElementById('hosp-total-packets');
+            const elApiStatus = document.getElementById('hosp-api-status');
+
+            let lastTransmissionId = null;
+            let expectedInterval = 180;
+            let timeRemaining = 180;
+            let countdownTimerId = null;
+
+            const circleRadius = 70;
+            const circleCircumference = 2 * Math.PI * circleRadius;
+            if (elProgressCircle) {
+                elProgressCircle.style.strokeDasharray = `${circleCircumference} ${circleCircumference}`;
+                elProgressCircle.style.strokeDashoffset = 0;
+            }
+
+            const ctx = document.getElementById('hospitalChart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Heart Rate (BPM)', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.08)', borderWidth: 2, tension: 0.3, fill: true, yAxisID: 'y-hr' },
+                        { label: 'SpO2 Saturation (%)', data: [], borderColor: '#0284c7', backgroundColor: 'rgba(2, 132, 199, 0.08)', borderWidth: 2, tension: 0.3, fill: false, yAxisID: 'y-spo2' },
+                        { label: 'Temperature (°C)', data: [], borderColor: '#f59e0b', borderWidth: 2, tension: 0.3, fill: false, yAxisID: 'y-temp' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 400 },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 10, family: 'JetBrains Mono' } } },
+                        'y-hr': { type: 'linear', position: 'left', min: 40, max: 180 },
+                        'y-spo2': { type: 'linear', position: 'right', min: 75, max: 100, grid: { display: false } },
+                        'y-temp': { type: 'linear', position: 'right', display: false, min: 34, max: 42 }
+                    },
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } } }
+                }
+            });
+
+            function updateProgressRing(secondsLeft, totalInterval) {
+                if (!elProgressCircle) return;
+                const progress = secondsLeft / totalInterval;
+                const offset = circleCircumference - (progress * circleCircumference);
+                elProgressCircle.style.strokeDashoffset = offset;
+            }
+
+            function formatTime(seconds) {
+                const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const s = (seconds % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            }
+
+            async function fetchLatestTelemetry() {
+                try {
+                    const res = await fetch('/api/hospital/latest');
+                    if (!res.ok) return;
+                    const result = await res.json();
+
+                    if (result.status === 'NO_DATA') {
+                        elHospId.textContent = 'Awaiting Telemetry...';
+                        elHospName.textContent = 'No ambulance payload yet';
+                        elHospReceivedTime.textContent = '--:--:--';
+                        return;
+                    }
+
+                    const data = result.data;
+                    if (!data) return;
+
+                    elConnectionPill.className = 'status-pill-online';
+                    elConnectionPill.innerHTML = `<i class="fa-solid fa-circle"></i> ACTIVE TELEMETRY`;
+                    elApiStatus.className = 'diag-val online';
+                    elApiStatus.innerHTML = `<i class="fa-solid fa-check-circle"></i> ONLINE`;
+
+                    if (data.id !== lastTransmissionId) {
+                        lastTransmissionId = data.id;
+                        timeRemaining = expectedInterval;
+                        elHospLastReceivedLabel.textContent = `Last: ${new Date(data.received_at).toLocaleTimeString()}`;
+                    }
+
+                    elHospId.textContent = data.patient_id || 'P-7842';
+                    elHospName.textContent = data.patient_name || 'Anonymous Subject';
+                    elHospDemographics.textContent = `${data.age} Yrs / ${data.gender}`;
+                    elHospReceivedTime.textContent = new Date(data.received_at).toLocaleTimeString();
+                    elHospSource.textContent = data.data_source || 'Ambulance Telemetry';
+
+                    const status = data.patient_status || 'NORMAL';
+                    elStatusTitle.textContent = `${status} PATIENT CONDITION`;
+                    elTriageLevel.textContent = data.emergency_level || 'LEVEL 3 - GREEN';
+                    elStatusReasons.textContent = data.reasons || 'All vital signs normal.';
+
+                    elBanner.className = 'status-banner';
+                    if (status === 'CRITICAL') elBanner.classList.add('status-critical');
+                    else if (status === 'WARNING') elBanner.classList.add('status-warning');
+                    else elBanner.classList.add('status-normal');
+
+                    elValHr.textContent = data.heart_rate;
+                    elValSpo2.textContent = data.spo2;
+                    elValBp.textContent = data.blood_pressure || `${data.systolic_bp}/${data.diastolic_bp}`;
+                    elValTemp.textContent = data.temperature;
+                    elValRr.textContent = data.respiratory_rate;
+
+                } catch (err) {
+                    console.warn("Error querying receiver API:", err);
+                }
+            }
+
+            async function fetchTransmissionHistory() {
+                try {
+                    const res = await fetch('/api/hospital/history?limit=50');
+                    if (!res.ok) return;
+                    const result = await res.json();
+                    const history = result.history || [];
+
+                    elTotalPackets.textContent = `${result.count || history.length} Transmissions`;
+
+                    if (history.length === 0) {
+                        elHistoryTbody.innerHTML = `
+                            <tr>
+                                <td colspan="10" class="text-center text-muted" style="padding: 2rem;">
+                                    <i class="fa-solid fa-satellite-dish fa-spin text-teal" style="font-size: 1.5rem;"></i><br>
+                                    Awaiting initial 3-minute telemetry payload from Ambulance...
+                                </td>
+                            </tr>`;
+                        return;
+                    }
+
+                    let html = '';
+                    chart.data.labels = [];
+                    chart.data.datasets[0].data = [];
+                    chart.data.datasets[1].data = [];
+                    chart.data.datasets[2].data = [];
+
+                    const chronHistory = [...history].reverse();
+                    chronHistory.forEach(row => {
+                        const timeStr = new Date(row.received_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        chart.data.labels.push(timeStr);
+                        chart.data.datasets[0].data.push(row.heart_rate);
+                        chart.data.datasets[1].data.push(row.spo2);
+                        chart.data.datasets[2].data.push(row.temperature);
+                    });
+                    chart.update();
+
+                    history.forEach((row) => {
+                        const status = row.patient_status || 'NORMAL';
+                        let rowClass = '';
+                        let statusBadge = `<span class="vital-status-tag tag-normal">NORMAL</span>`;
+
+                        if (status === 'CRITICAL') {
+                            rowClass = 'row-critical';
+                            statusBadge = `<span class="vital-status-tag tag-critical"><i class="fa-solid fa-triangle-exclamation"></i> CRITICAL</span>`;
+                        } else if (status === 'WARNING') {
+                            rowClass = 'row-warning';
+                            statusBadge = `<span class="vital-status-tag tag-warning">WARNING</span>`;
+                        }
+
+                        const receivedTime = new Date(row.received_at).toLocaleTimeString();
+
+                        html += `
+                            <tr class="${rowClass}">
+                                <td>#${row.id}</td>
+                                <td><strong>${receivedTime}</strong></td>
+                                <td>${row.patient_id}</td>
+                                <td class="${row.heart_rate > 100 ? 'text-danger font-bold' : ''}">${row.heart_rate} BPM</td>
+                                <td class="${row.spo2 < 92 ? 'text-danger font-bold' : ''}">${row.spo2}%</td>
+                                <td>${row.blood_pressure || `${row.systolic_bp}/${row.diastolic_bp}`}</td>
+                                <td>${row.temperature}°C</td>
+                                <td>${row.respiratory_rate} bpm</td>
+                                <td>${statusBadge}</td>
+                                <td><span class="text-teal font-bold"><i class="fa-solid fa-circle-check"></i> RECEIVED</span></td>
+                            </tr>
+                        `;
+                    });
+
+                    elHistoryTbody.innerHTML = html;
+
+                } catch (err) {
+                    console.warn("Failed to fetch transmission history log:", err);
+                }
+            }
+
+            function startTimerLoop() {
+                if (countdownTimerId) clearInterval(countdownTimerId);
+
+                countdownTimerId = setInterval(() => {
+                    timeRemaining--;
+                    if (timeRemaining < 0) timeRemaining = expectedInterval;
+                    elHospCountdown.textContent = formatTime(timeRemaining);
+                    updateProgressRing(timeRemaining, expectedInterval);
+                }, 1000);
+            }
+
+            if (elBtnRefreshHistory) {
+                elBtnRefreshHistory.addEventListener('click', () => {
+                    fetchLatestTelemetry();
+                    fetchTransmissionHistory();
+                });
+            }
+
+            fetchLatestTelemetry();
+            fetchTransmissionHistory();
+            setInterval(fetchLatestTelemetry, 3000);
+            setInterval(fetchTransmissionHistory, 5000);
+            startTimerLoop();
+        });
+    </script>
 </body>
 </html>
